@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import math
-
+from scipy.special import softmax
 
 class Layer:
     '''
@@ -171,7 +171,7 @@ class MLP:
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
         # for each epoch (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
-        for e in ranges(epochs):
+        for e in range(epochs):
             # shuffle
             examples = list(zip(training_X, training_y))
             random.shuffle(examples)
@@ -191,14 +191,14 @@ class MLP:
         '''
         batch_X: matrix of size batch_size x input_size
         Loops through the layers calling forward propagation on each, then applies softmax and computes the loss
-        Output: NLL loss (do we need it?) and probabilities_output
+        Output: probabilities_output, a matrix of size batch_size x number_of_classes
         '''
         self.layers_list[0].forward_propagation(batch_X)
-        for i in range(len(self.layers_list)):
-            self.layers_list[i+1].forward_propagation(self.layers_list[i].neuron_values)
+        for i in range(1, len(self.layers_list)):
+            self.layers_list[i].forward_propagation(self.layers_list[i-1].neuron_values)
         # matrix of size batch_size x number_of_classes
-        probabilities_output = None
-        pass
+        probabilities_output = softmax(self.layers_list[i].neuron_values, axis=1)
+        return probabilities_output
 
     def back_propagation(self, probabilities_output, batch_y):
         '''

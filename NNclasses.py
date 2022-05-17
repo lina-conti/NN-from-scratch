@@ -103,7 +103,7 @@ class ActivationLayer(Layer):
     function_lookup = {
         'sigamoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
         'tanh': (lambda x: (math.exp(2*x)-1)/(math.exp(2*x)+1), lambda x: 1-x**2),
-        'relu': lambda x: max(0, x)
+        'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
     }
 
     def __init__(self, layer_size, activation_function):

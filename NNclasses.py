@@ -1,4 +1,5 @@
 import numpy as np
+import math 
 
 class Layer:
     '''
@@ -97,6 +98,11 @@ class ActivationLayer(Layer):
     '''
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
+    function_lookup = {
+        'sigamoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
+        'tanh': (lambda x: (math.exp(2*x)-1)/(math.exp(2*x)+1), lambda x: 1-x**2),
+        'relu': lambda x: max(0, x)
+    }
 
     def __init__(self, layer_size, activation_function):
         '''
@@ -105,14 +111,18 @@ class ActivationLayer(Layer):
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
-        self.activation_function = None # get function from the dictionary
+         # get activation function from the dictionary
+        function, derivative = self.function_lookup[activation_function]
+
+        self.activation_function = np.vectorize(function)
+        self.derivative = np.vectorize(derivative)
 
     def forward_propagation(self, batch_X):
         '''
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by applying the activation function to batch_X
         '''
-        pass
+        return self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -120,7 +130,8 @@ class ActivationLayer(Layer):
         layer_gradient: TODO add description
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
-        pass
+        grad = self.derivative(values_previous_layer)
+        return layer_gradient*grad
 
     def update(self, learning_rate):
         '''

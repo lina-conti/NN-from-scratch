@@ -122,7 +122,7 @@ class ActivationLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by applying the activation function to batch_X
         '''
-        return self.activation_function(batch_X)
+        self.neuron_values= self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''

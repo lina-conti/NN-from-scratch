@@ -53,9 +53,9 @@ class AffineLayer(Layer):
         '''
         super().__init__(layer_size)
         # matrix of size input_size x layer_size
-        self.weights = None #randomly initialize them
+        self.weights = np.random.rand(input_size, layer_size) #randomly initialize them
         # vector of size layer_size
-        self.bias = None    # randomly initialize
+        self.bias = np.random.rand(layer_size)    # randomly initializes it
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None
@@ -67,7 +67,7 @@ class AffineLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        pass
+        self.neuron_values = None  # batch_size x layer_size
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''

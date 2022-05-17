@@ -70,7 +70,10 @@ class AffineLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        self.neuron_values = None  # batch_size x layer_size
+        dot_porduct= np.dot(batch_X,weights) # batch_size x layer_size
+        self.neuron_values=np.empty_like(dot_porduct) # batch_size x layer_size
+        for i in range(len(dot_porduct)):
+            self.neuron_values[i, :] = dot_porduct[i, :] + biais
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''

@@ -2,6 +2,7 @@ import numpy as np
 import random
 import math
 
+
 class Layer:
     '''
     Abstract class containing what AffineLayer and ActivationLayer share in common

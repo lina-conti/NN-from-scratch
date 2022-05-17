@@ -171,7 +171,7 @@ class MLP:
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
         # for each epoch (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
-        for e in ranges(epochs):
+        for e in range(epochs):
             # shuffle
             examples = list(zip(training_X, training_y))
             random.shuffle(examples)
@@ -221,7 +221,8 @@ class MLP:
         Output: the predicted class (index of the class) for each input (can be a single value or a vector)
         '''
         # call forward_propagation and do an argmax
-        pass
+        scores = self.forward_propagation(input_X)
+        return np.argmax(scores, axis = 1)
 
     def test(self, test_X, test_y):
         '''
@@ -230,4 +231,6 @@ class MLP:
         Output: the accuracy of the MLP for this test set
         '''
         # call predict and compute the accuracy by comparing the results to test_y
-        pass
+        y_preds = self.predict(test_X)
+        right = np.sum(y_preds == test_y)
+        return right/len(test_y)

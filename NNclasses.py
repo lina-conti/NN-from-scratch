@@ -1,5 +1,7 @@
 import numpy as np
-import math 
+import random
+import math
+
 
 class Layer:
     '''
@@ -152,7 +154,11 @@ class MLP:
         Output: an instance of MLP with layers_list initialized
         '''
         # a list of Layer instances
-        self.layers_list = None # initialize here
+        self.layers_list = []
+        for i, h in enumerate(list_activations):    # i is the number of the layer and h the activation function
+            self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
+            self.layers_list.append(ActivationLayer(list_sizes_layers[i+1],h))
+        self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))   # output layer
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
@@ -164,9 +170,22 @@ class MLP:
         Learns the parameters of the MLP on the training data passed to the function
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
-        # for each epoch, shuffle and separate into batches (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
-        # for each batch, do forward, back propagation and update
-        pass
+        # for each epoch (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
+        for e in ranges(epochs):
+            # shuffle
+            examples = list(zip(training_X, training_y))
+            random.shuffle(examples)
+            training_X, training_y = zip(*examples)
+            # separate into batches
+            i = 0
+            while i < len(examples):
+                batch_X = training_X[i: i+batch_size]
+                batch_y = training_y[i: i+batch_size]
+                i += batch_size
+                # for each batch, do forward, back propagation and update
+                NLL_loss, probabilities_output = self.forward_propagation(batch_X)
+                self.back_propagation(probabilities_output, batch_y)
+                self.update(learning_rate)
 
     def forward_propagation(self, batch_X):
         '''
@@ -174,6 +193,9 @@ class MLP:
         Loops through the layers calling forward propagation on each, then applies softmax and computes the loss
         Output: NLL loss (do we need it?) and probabilities_output
         '''
+        self.layers_list[0].forward_propagation(batch_X)
+        for i in range(len(self.layers_list)):
+            self.layers_list[i+1].forward_propagation(self.layers_list[i].neuron_values)
         # matrix of size batch_size x number_of_classes
         probabilities_output = None
         pass

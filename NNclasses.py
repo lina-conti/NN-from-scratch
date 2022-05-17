@@ -1,7 +1,4 @@
 import numpy as np
-import random
-import math
-from scipy.special import softmax
 
 class Layer:
     '''
@@ -66,11 +63,17 @@ class AffineLayer(Layer):
         self.bias_gradient = None
 
     def forward_propagation(self, batch_X):
+        neuron_values=np.array([])
+        neuron_values = np.dot(batch_X,weights)
+        neuron_values_biais=np.empty_like(neuron_values)
+        for i in range(len(neuron_values)):
+            neuron_values_biais[i, :] = neuron_values[i, :] + biais
         '''
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        self.neuron_values = None  # batch_size x layer_size
+        # self.neuron_values = None  # batch_size x layer_size
+        return neuron_values_biais
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -100,11 +103,6 @@ class ActivationLayer(Layer):
     '''
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
-    function_lookup = {
-        'sigamoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
-        'tanh': (lambda x: (math.exp(2*x)-1)/(math.exp(2*x)+1), lambda x: 1-x**2),
-        'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
-    }
 
     def __init__(self, layer_size, activation_function):
         '''
@@ -113,18 +111,14 @@ class ActivationLayer(Layer):
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
-         # get activation function from the dictionary
-        function, derivative = self.function_lookup[activation_function]
-
-        self.activation_function = np.vectorize(function)
-        self.derivative = np.vectorize(derivative)
+        self.activation_function = None # get function from the dictionary
 
     def forward_propagation(self, batch_X):
         '''
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by applying the activation function to batch_X
         '''
-        self.neuron_values = self.activation_function(batch_X)
+        pass
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -132,8 +126,7 @@ class ActivationLayer(Layer):
         layer_gradient: TODO add description
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
-        grad = self.derivative(values_previous_layer)
-        return layer_gradient*grad
+        pass
 
     def update(self, learning_rate):
         '''
@@ -154,11 +147,7 @@ class MLP:
         Output: an instance of MLP with layers_list initialized
         '''
         # a list of Layer instances
-        self.layers_list = []
-        for i, h in enumerate(list_activations):    # i is the number of the layer and h the activation function
-            self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
-            self.layers_list.append(ActivationLayer(list_sizes_layers[i+1],h))
-        self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))   # output layer
+        self.layers_list = None # initialize here
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
@@ -170,35 +159,19 @@ class MLP:
         Learns the parameters of the MLP on the training data passed to the function
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
-        # for each epoch (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
-        for e in range(epochs):
-            # shuffle
-            examples = list(zip(training_X, training_y))
-            random.shuffle(examples)
-            training_X, training_y = zip(*examples)
-            # separate into batches
-            i = 0
-            while i < len(examples):
-                batch_X = training_X[i: i+batch_size]
-                batch_y = training_y[i: i+batch_size]
-                i += batch_size
-                # for each batch, do forward, back propagation and update
-                NLL_loss, probabilities_output = self.forward_propagation(batch_X)
-                self.back_propagation(probabilities_output, batch_y)
-                self.update(learning_rate)
+        # for each epoch, shuffle and separate into batches (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
+        # for each batch, do forward, back propagation and update
+        pass
 
     def forward_propagation(self, batch_X):
         '''
         batch_X: matrix of size batch_size x input_size
         Loops through the layers calling forward propagation on each, then applies softmax and computes the loss
-        Output: probabilities_output, a matrix of size batch_size x number_of_classes
+        Output: NLL loss (do we need it?) and probabilities_output
         '''
-        self.layers_list[0].forward_propagation(batch_X)
-        for i in range(1, len(self.layers_list)):
-            self.layers_list[i].forward_propagation(self.layers_list[i-1].neuron_values)
         # matrix of size batch_size x number_of_classes
-        probabilities_output = softmax(self.layers_list[i].neuron_values, axis=1)
-        return probabilities_output
+        probabilities_output = None
+        pass
 
     def back_propagation(self, probabilities_output, batch_y):
         '''
@@ -221,8 +194,7 @@ class MLP:
         Output: the predicted class (index of the class) for each input (can be a single value or a vector)
         '''
         # call forward_propagation and do an argmax
-        scores = self.forward_propagation(input_X)
-        return np.argmax(scores, axis = 1)
+        pass
 
     def test(self, test_X, test_y):
         '''
@@ -231,6 +203,4 @@ class MLP:
         Output: the accuracy of the MLP for this test set
         '''
         # call predict and compute the accuracy by comparing the results to test_y
-        y_preds = self.predict(test_X)
-        right = np.sum(y_preds == test_y)
-        return right/len(test_y)
+        pass

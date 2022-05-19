@@ -154,6 +154,19 @@ class ActivationLayer(Layer):
         '''
         pass
 
+# AUXILIARY FUNCTIONS FOR MLP class
+def get_one_hot_batch(batch_y):
+    '''
+    batch_y: ndarray of size batch_size with the index of the gold class for each example in the batch
+    Output: a batch of one-hot vectors with 1 at the y component for each example
+    '''
+    one_hot = np.zeros(batch_y.size, batch_y.max()+1)
+    # an array of size batch_size with values from 0 to the bacth_size
+    rows = np.arange(batch_y.size)
+    # set the components at the index of the gold classes to 1
+    one_hot[rows, batch_y] = 1
+    return one_hot
+
 class MLP:
     '''
     Multi-layer perceptron
@@ -182,7 +195,7 @@ class MLP:
         Learns the parameters of the MLP on the training data passed to the function
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
-        # for each epoch (for shuffling maybe use truc = zip(X,y), shuffle truc and then zip(*truc))
+        # for each epoch
         for e in range(epochs):
             # shuffle
             examples = list(zip(training_X, training_y))
@@ -206,10 +219,10 @@ class MLP:
         Output: probabilities_output, a matrix of size batch_size x number_of_classes
         '''
         self.layers_list[0].forward_propagation(batch_X)
-        for i in range(1, len(self.layers_list)):
-            self.layers_list[i].forward_propagation(self.layers_list[i-1].neuron_values)
+        for k in range(1, len(self.layers_list)):
+            self.layers_list[k].forward_propagation(self.layers_list[k-1].neuron_values)
         # matrix of size batch_size x number_of_classes
-        probabilities_output = softmax(self.layers_list[i].neuron_values, axis=1)
+        probabilities_output = softmax(self.layers_list[k].neuron_values, axis=1)
         return probabilities_output
 
     def back_propagation(self, probabilities_output, batch_y):
@@ -217,8 +230,17 @@ class MLP:
         probabilities_output: matrix of size batch_size x number_of_classes (result of forward_propagation)
         batch_y: vector of size batch_size
         Loops through the layers 'in reverse order' (wrt forward propagation) calling back_propagation on each
+        TODO Lina working on this
         '''
-        pass
+        # a batch of one-hot vectors with 1 at the y component for each example
+        one_hot = get_one_hot_batch(batch_y)
+        # gradient of NLL loss wrt to the pre-activation vectors at the output layer (=-e(y)-f(s) by LaRochelle's notations)
+        output_gradient = - (one_hot - probabilities_output)
+        # for k from L+1 to 1 (by LaRochelle's notations)
+        for k in range(len(self.layers_list)-1, -1, -1):
+            # compute gradients of hidden layer parameters and of the hidden layer below
+            # compute gradient of the hidden layer below (before activation)
+
 
     def update(self, learning_rate):
         '''

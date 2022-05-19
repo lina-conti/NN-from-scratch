@@ -5,7 +5,8 @@ from scipy.special import softmax
 
 class Layer:
     '''
-    Abstract class containing what AffineLayer and ActivationLayer share in common
+    Class containing what AffineLayer and ActivationLayer share in common
+    It is also used to define the input layer simply
     '''
 
     def __init__(self, layer_size):
@@ -14,7 +15,9 @@ class Layer:
         Output: an instance of a Layer of layer_size neurons
         '''
         self.layer_size = layer_size
-        # a matrix of size batch_size x layer_size (initialized and then updated by forward_propagation)
+        # a matrix of size batch_size x layer_size
+        # initialized and then updated by forward_propagation for AffineLayer and ActivationLayer
+        # initialized manually for the input layer
         self.neuron_values = None
 
     def forward_propagation(self, batch_X):
@@ -99,16 +102,16 @@ class AffineLayer(Layer):
 
 class ActivationLayer(Layer):
     '''
-    the activation layer of a neural network. Initialized with a number of neurons (should match the 
+    the activation layer of a neural network. Initialized with a number of neurons (should match the
     size of the preceding affine layer) and a custom activation functino (sigamoid, tanh, relu)
 
-    forward propagation applies the activation function to the value at every neuron. 
+    forward propagation applies the activation function to the value at every neuron.
     update resets the gradient of this layer (there are no parameters to update)
     '''
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
     function_lookup = {
-        'sigamoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
+        'sigmoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
         'tanh': (lambda x: (math.exp(2*x)-1)/(math.exp(2*x)+1), lambda x: 1-x**2),
         'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
     }
@@ -116,7 +119,7 @@ class ActivationLayer(Layer):
     def __init__(self, layer_size, activation_function):
         '''
         layer_size: int
-        activation_function: string id of an activation function to be fetched from the 
+        activation_function: string id of an activation function to be fetched from the
             layer's activation functions dictionary
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
@@ -137,12 +140,12 @@ class ActivationLayer(Layer):
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
         values_previous_layer: the neuron values from the layer previous to this one in terms
-             of forward propagation. can be a vector the size of the previous layer or a matrix of size 
+             of forward propagation. can be a vector the size of the previous layer or a matrix of size
              prev_layer x batch_size
         layer_gradient: the gradient of this layer wrt. the loss, calculated at the layer After this one
-            can be a vector of size layer_size or a matrix of size layer_size x batch_size 
+            can be a vector of size layer_size or a matrix of size layer_size x batch_size
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
-            vector of size previous_layer or matrix of size previous_layer x batch_size 
+            vector of size previous_layer or matrix of size previous_layer x batch_size
         '''
         grad = self.derivative(values_previous_layer)
         return layer_gradient*grad
@@ -180,9 +183,14 @@ class MLP:
         '''
         # a list of Layer instances
         self.layers_list = []
+        # add the input layer
+        input_layer = Layer(list_sizes_layers[0])
+        self.layers_list.append(input_layer)
+        # add the hidden layers
         for i, h in enumerate(list_activations):    # i is the number of the layer and h the activation function
             self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
             self.layers_list.append(ActivationLayer(list_sizes_layers[i+1],h))
+        # add the output layer (no activation, softmax is handled separately)
         self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))   # output layer
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
@@ -218,7 +226,9 @@ class MLP:
         Loops through the layers calling forward propagation on each, then applies softmax and computes the loss
         Output: probabilities_output, a matrix of size batch_size x number_of_classes
         '''
-        self.layers_list[0].forward_propagation(batch_X)
+        # initialize the input layer
+        self.layers_list[0].neuron_values = batch_X
+        # looping through the hidden layers, calling forward_propagation on each
         for k in range(1, len(self.layers_list)):
             self.layers_list[k].forward_propagation(self.layers_list[k-1].neuron_values)
         # matrix of size batch_size x number_of_classes
@@ -236,11 +246,11 @@ class MLP:
         one_hot = get_one_hot_batch(batch_y)
         # gradient of NLL loss wrt to the pre-activation vectors at the output layer (=-e(y)-f(s) by LaRochelle's notations)
         output_gradient = - (one_hot - probabilities_output)
-        # for k from L+1 to 1 (by LaRochelle's notations)
-        for k in range(len(self.layers_list)-1, -1, -1):
-            # compute gradients of hidden layer parameters and of the hidden layer below
-            # compute gradient of the hidden layer below (before activation)
-
+        # loop in reverse order through the layers (stopping before the input layer)
+        layer_gradient = output_gradient
+        for k in range(len(self.layers_list)-1, 0, -1):
+            # back_propagation on each layer
+            layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
 
     def update(self, learning_rate):
         '''

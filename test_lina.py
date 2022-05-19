@@ -1,2 +1,3 @@
-print("hello")
-print ("Isaac and Alice ")
+from NNclasses import *
+
+mlp = MLP([2,2,1], ["sigmoid"])

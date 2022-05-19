@@ -257,7 +257,8 @@ class MLP:
         learning_rate: float
         Loops through the layers and calls their update method
         '''
-        pass
+        for layer in self.layers:
+            layer.update(learning_rate)
 
     def predict(self, input_X):
         '''

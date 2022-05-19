@@ -48,7 +48,11 @@ class Layer:
 
 class AffineLayer(Layer):
     '''
-    TODO add description
+    Affine layer of a neural network. Initialized with a number of neurons (should match the
+    size of the preceding layer (input or activation layer)). Its parameters are randomly initialized.
+
+    Forward propagation does a linear combination between the input and the weight matrix and adds the bias.
+    Update modifies the values of the parameters (according to the previously computed gradients) and then zeroes the gradients.
     '''
 
     def __init__(self, layer_size, input_size):
@@ -80,8 +84,11 @@ class AffineLayer(Layer):
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
-        values_previous_layer: TODO add description
-        layer_gradient: TODO add description
+        values_previous_layer: the neuron values from the layer previous to this one in terms
+             of forward propagation, can be a vector the size of the previous layer or a matrix of size
+             prev_layer x batch_size
+        layer_gradient: the gradient of the loss wrt this layer, calculated by the following layer,
+            can be a vector of size layer_size or a matrix of size layer_size x batch_size
         Computes weights_gradient and bias_gradient
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
@@ -102,11 +109,11 @@ class AffineLayer(Layer):
 
 class ActivationLayer(Layer):
     '''
-    the activation layer of a neural network. Initialized with a number of neurons (should match the
-    size of the preceding affine layer) and a custom activation functino (sigamoid, tanh, relu)
+    Activation layer of a hidden layer in a neural network. Initialized with a number of neurons (should match the
+    size of the preceding affine layer) and a custom activation function (sigmoid, tanh, relu)
 
-    forward propagation applies the activation function to the value at every neuron.
-    update resets the gradient of this layer (there are no parameters to update)
+    Forward propagation applies the activation function to the value at every neuron.
+    Update does not do anything (there are no parameters to update).
     '''
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
@@ -240,7 +247,6 @@ class MLP:
         probabilities_output: matrix of size batch_size x number_of_classes (result of forward_propagation)
         batch_y: vector of size batch_size
         Loops through the layers 'in reverse order' (wrt forward propagation) calling back_propagation on each
-        TODO Lina working on this
         '''
         # a batch of one-hot vectors with 1 at the y component for each example
         one_hot = get_one_hot_batch(batch_y)
@@ -257,7 +263,7 @@ class MLP:
         learning_rate: float
         Loops through the layers and calls their update method
         '''
-        for layer in self.layers:
+        for layer in self.layers_list:
             layer.update(learning_rate)
 
     def predict(self, input_X):

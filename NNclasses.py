@@ -70,10 +70,10 @@ class AffineLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        dot_porduct= np.dot(batch_X,weights) # batch_size x layer_size
+        dot_porduct= np.dot(batch_X, self.weights) # batch_size x layer_size
         self.neuron_values=np.empty_like(dot_porduct) # batch_size x layer_size
         for i in range(len(dot_porduct)):
-            self.neuron_values[i, :] = dot_porduct[i, :] + biais
+            self.neuron_values[i, :] = dot_porduct[i, :] + self.bias
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -99,7 +99,11 @@ class AffineLayer(Layer):
 
 class ActivationLayer(Layer):
     '''
-    TODO add description
+    the activation layer of a neural network. Initialized with a number of neurons (should match the 
+    size of the preceding affine layer) and a custom activation functino (sigamoid, tanh, relu)
+
+    forward propagation applies the activation function to the value at every neuron. 
+    update resets the gradient of this layer (there are no parameters to update)
     '''
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
@@ -112,7 +116,8 @@ class ActivationLayer(Layer):
     def __init__(self, layer_size, activation_function):
         '''
         layer_size: int
-        activation_function: string id of an activation function to be fetched from the activation function's dictionary
+        activation_function: string id of an activation function to be fetched from the 
+            layer's activation functions dictionary
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
@@ -131,9 +136,13 @@ class ActivationLayer(Layer):
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
-        values_previous_layer: TODO add description
-        layer_gradient: TODO add description
+        values_previous_layer: the neuron values from the layer previous to this one in terms
+             of forward propagation. can be a vector the size of the previous layer or a matrix of size 
+             prev_layer x batch_size
+        layer_gradient: the gradient of this layer wrt. the loss, calculated at the layer After this one
+            can be a vector of size layer_size or a matrix of size layer_size x batch_size 
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
+            vector of size previous_layer or matrix of size previous_layer x batch_size 
         '''
         grad = self.derivative(values_previous_layer)
         return layer_gradient*grad
@@ -141,7 +150,7 @@ class ActivationLayer(Layer):
     def update(self, learning_rate):
         '''
         learning_rate: float
-        Resets the gradients to zeroes (but will we store the gradients for activation layers?)
+        doesn't do anything (there are no parameters to change in an activation layer)
         '''
         pass
 

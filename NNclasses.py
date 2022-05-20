@@ -60,6 +60,7 @@ class AffineLayer(Layer):
         layer_size: int
         input_size: int
         Output: an instance of a AffineLayer with layer_size neurons and randomly initialized weights and biases
+        # TODO use better initialization values for the parameters?
         '''
         super().__init__(layer_size)
         # matrix of size input_size x layer_size
@@ -87,9 +88,9 @@ class AffineLayer(Layer):
         '''
         values_previous_layer: the neuron values from the layer previous to this one in terms
              of forward propagation, can be a vector the size of the previous layer or a matrix of size
-             prev_layer x batch_size
+             batch_size x prev_layer
         layer_gradient: the gradient of the loss wrt this layer, calculated by the following layer,
-            can be a vector of size layer_size or a matrix of size layer_size x batch_size
+            can be a vector of size layer_size or a matrix of size batch_size x layer_size
         Computes weights_gradient and bias_gradient
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
@@ -112,8 +113,8 @@ class AffineLayer(Layer):
         # Proceed likewise for bias
         self.bias = np.subtract(self.bias, (learning_rate*self.bias_gradient))
         self.weights= np.subtract(self.weights, (learning_rate*self.weights_gradient))
-        
-        
+
+
 class ActivationLayer(Layer):
     '''
     Activation layer of a hidden layer in a neural network. Initialized with a number of neurons (should match the
@@ -155,9 +156,9 @@ class ActivationLayer(Layer):
         '''
         values_previous_layer: the neuron values from the layer previous to this one in terms
              of forward propagation. can be a vector the size of the previous layer or a matrix of size
-             prev_layer x batch_size
+             batch_size x prev_layer
         layer_gradient: the gradient of this layer wrt. the loss, calculated at the layer After this one
-            can be a vector of size layer_size or a matrix of size layer_size x batch_size
+            can be a vector of size layer_size or a matrix of size batch_size x layer_size
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
             vector of size previous_layer or matrix of size previous_layer x batch_size
         '''

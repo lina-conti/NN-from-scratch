@@ -55,7 +55,7 @@ class AffineLayer(Layer):
     Update modifies the values of the parameters (according to the previously computed gradients) and then zeroes the gradients.
     '''
 
-    def __init__(self, layer_size, input_size):
+    def __init__(self, input_size, layer_size):
         '''
         layer_size: int
         input_size: int
@@ -96,10 +96,11 @@ class AffineLayer(Layer):
         '''
         # use outer product for the weights gradient
         # the gradients will have one dimension more, we need to "squeeze" them
-        self.weights_gradient = np.dot(np.transpose(layer_gradient),values_previous_layer)
+        self.weights_gradient = np.dot(np.transpose(values_previous_layer), layer_gradient)
+        
         self.bias_gradient = layer_gradient
         
-        return np.dot(layer_gradient,np.transpose(self.weights))
+        return np.dot(layer_gradient, np.transpose(self.weights))
 
 
     def update(self, learning_rate):
@@ -145,11 +146,15 @@ class ActivationLayer(Layer):
         self.activation_function = np.vectorize(function)
         self.derivative = np.vectorize(derivative)
 
+
+
     def forward_propagation(self, batch_X):
         '''
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by applying the activation function to batch_X
+
         '''
+        test = np.array([-2, -1, 0, 1, 2, 3])
         self.neuron_values = self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
@@ -190,12 +195,13 @@ class MLP:
     Multi-layer perceptron
     '''
 
-    def __init__(self, list_sizes_layers, list_activations):
+    def __init__(self, list_sizes_layers, list_activations, verbose = False):
         '''
         list_activations: list of strings of size the number of hidden layers
         list_sizes_layers: list of int of size len(list_activations) + 2 (for the input and output layers as well)
         Output: an instance of MLP with layers_list initialized
         '''
+        self.verbose = verbose
         # a list of Layer instances
         self.layers_list = []
         # add the input layer
@@ -206,9 +212,9 @@ class MLP:
             self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
             self.layers_list.append(ActivationLayer(list_sizes_layers[i+1],h))
         # add the output layer (no activation, softmax is handled separately)
-        self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))   # output layer
+        self.layers_list.append(AffineLayer(list_sizes_layers[-2],list_sizes_layers[-1]))   # output layer
 
-    def fit(self, training_X, training_y, batch_size, learning_rate, epochs, verbose = False):
+    def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
         training_X: matrix of size T x input_size
         training_y: a vector of size T
@@ -234,7 +240,7 @@ class MLP:
                 probabilities_output = self.forward_propagation(batch_X)
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
-            if verbose and e%5000==0: 
+            if self.verbose and e%5000==0: 
                 print('finished epoch ', e)
 
 
@@ -266,6 +272,9 @@ class MLP:
         # loop in reverse order through the layers (stopping before the input layer)
         layer_gradient = output_gradient
         for k in range(len(self.layers_list)-1, 0, -1):
+            if self.verbose: 
+                print(f'layer {k}\n layer gradient: {layer_gradient}\n\
+                     previous values{self.layers_list[k-1].neuron_values}')
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
 

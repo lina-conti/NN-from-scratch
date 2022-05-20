@@ -127,7 +127,7 @@ class ActivationLayer(Layer):
 
     # define the activation function's dictionary here, so it is a "static" attribute of the class
     function_lookup = {
-        'sigmoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
+        'sigmoid': (lambda x: 1/(1+np.exp(x)), lambda x: x*(1-x)),
         'tanh': (lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1), lambda x: 1-x**2),
         'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
     }

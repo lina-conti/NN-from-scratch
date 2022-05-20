@@ -77,10 +77,11 @@ class AffineLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        dot_porduct= np.dot(batch_X, self.weights) # batch_size x layer_size
+        '''dot_porduct= np.dot(batch_X, self.weights) # batch_size x layer_size
         self.neuron_values=np.empty_like(dot_porduct) # batch_size x layer_size
         for i in range(len(dot_porduct)):
-            self.neuron_values[i, :] = dot_porduct[i, :] + self.bias
+            self.neuron_values[i, :] = dot_porduct[i, :] + self.bias'''
+        self.neuron_values = np.dot(batch_X, self.weights) + self.bias
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -94,8 +95,9 @@ class AffineLayer(Layer):
         '''
         # use outer product for the weights gradient
         # the gradients will have one dimension more, we need to "squeeze" them
-        self.weights_gradient = np.outer(layer_gradient,values_previous_layer)
+        self.weights_gradient = np.dot(np.transpose(layer_gradient),values_previous_layer)
         self.bias_gradient = layer_gradient
+        
         return np.dot(layer_gradient,np.transpose(self.weights))
 
 
@@ -124,7 +126,7 @@ class ActivationLayer(Layer):
     # define the activation function's dictionary here, so it is a "static" attribute of the class
     function_lookup = {
         'sigmoid': (lambda x: 1/(1+math.exp(x)), lambda x: x*(1-x)),
-        'tanh': (lambda x: (math.exp(2*x)-1)/(math.exp(2*x)+1), lambda x: 1-x**2),
+        'tanh': (lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1), lambda x: 1-x**2),
         'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
     }
 
@@ -175,7 +177,7 @@ def get_one_hot_batch(batch_y):
     batch_y: ndarray of size batch_size with the index of the gold class for each example in the batch
     Output: a batch of one-hot vectors with 1 at the y component for each example
     '''
-    one_hot = np.zeros(batch_y.size, batch_y.max()+1)
+    one_hot = np.zeros((batch_y.size, batch_y.max()+1))
     # an array of size batch_size with values from 0 to the bacth_size
     rows = np.arange(batch_y.size)
     # set the components at the index of the gold classes to 1
@@ -205,7 +207,7 @@ class MLP:
         # add the output layer (no activation, softmax is handled separately)
         self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))   # output layer
 
-    def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
+    def fit(self, training_X, training_y, batch_size, learning_rate, epochs, verbose = False):
         '''
         training_X: matrix of size T x input_size
         training_y: a vector of size T
@@ -224,13 +226,16 @@ class MLP:
             # separate into batches
             i = 0
             while i < len(examples):
-                batch_X = training_X[i: i+batch_size]
-                batch_y = training_y[i: i+batch_size]
+                batch_X = np.array(training_X[i: i+batch_size])
+                batch_y = np.array(training_y[i: i+batch_size])
                 i += batch_size
                 # for each batch, do forward, back propagation and update
-                NLL_loss, probabilities_output = self.forward_propagation(batch_X)
+                probabilities_output = self.forward_propagation(batch_X)
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
+            if verbose and e%5000==0: 
+                print('finished epoch ', e)
+
 
     def forward_propagation(self, batch_X):
         '''

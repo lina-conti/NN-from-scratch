@@ -154,7 +154,7 @@ class ActivationLayer(Layer):
         Updates the attribute neuron_values by applying the activation function to batch_X
 
         '''
-        test = np.array([-2, -1, 0, 1, 2, 3])
+        #test = np.array([-2, -1, 0, 1, 2, 3])
         self.neuron_values = self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
@@ -176,6 +176,59 @@ class ActivationLayer(Layer):
         doesn't do anything (there are no parameters to change in an activation layer)
         '''
         pass
+
+class EmbeddingLayer(Layer): 
+    'the embedding layer for a mlp. stores words as randomly initialized vectors of a given length'
+
+    def __init__(self, vocab_size, embed_size, ones = False):
+        '''randomly initialize a matrix of size vocab_size x embedding_size 
+        TODO: smarter initialization'''
+        self.vocab_size = vocab_size
+        self.embed_size = embed_size
+        if ones: 
+            self.weights = np.ones((vocab_size, embed_size))
+        else:
+            self.weights = np.random.rand(vocab_size, embed_size)
+        print(self.weights)
+
+    def forward_propagation(self, batch_X):
+        '''given a batch of inputs, return the concatination of embeddings for each input'''
+        self.in_ids = batch_X
+        return np.array([np.concatenate([self.weights[ident] for ident in seq]) for seq in batch_X])
+
+    def back_propagation(self, values_previous_layer, layer_gradient):
+        '''input: values_previous layer (batch_size x window_size), the ids for the words in each batch
+                    layer_gradient (batch_size x hidden_size), the gradient returned by layer H1
+                    
+            calculates the updates to the word embedding matrix 
+            
+            returns the values for the previous layer because i guess it had to return something'''
+        #initialize gradient for word embeddings
+        self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
+        #reshape input to embeddings for indivudual words
+        shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size)#batch_size x num_words x embed size 
+        #init one-hot vectors so that the gradients go to the right embeddings
+        one_hot = self.one_hot_matrix(values_previous_layer)
+
+        #calcualte the embeddings
+        for i, o_h in enumerate(one_hot): 
+            update = np.dot(o_h.T, shaped[i])
+            self.embeds_gradient += update
+
+        return values_previous_layer #this does nothing
+        
+    def one_hot_matrix(self, batch_values): 
+        '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
+        empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #btch_size x w x V
+        print(empty)
+        for i, in_seq in enumerate(batch_values): 
+            for j, val in enumerate(in_seq):
+                empty[i,j, val]+=1
+        return empty
+
+    def update(self, learning_rate):
+        self.weights = np.subtract(self.weights, learning_rate*self.embeds_gradient)
+
 
 # AUXILIARY FUNCTIONS FOR MLP class
 def get_one_hot_batch(batch_y):
@@ -207,6 +260,7 @@ class MLP:
         # add the input layer
         input_layer = Layer(list_sizes_layers[0])
         self.layers_list.append(input_layer)
+
         # add the hidden layers
         for i, h in enumerate(list_activations):    # i is the number of the layer and h the activation function
             self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
@@ -277,6 +331,7 @@ class MLP:
                      previous values{self.layers_list[k-1].neuron_values}')
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
+        return layer_gradient
 
     def update(self, learning_rate):
         '''

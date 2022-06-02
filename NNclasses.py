@@ -360,3 +360,9 @@ class MLP:
         y_preds = self.predict(test_X)
         right = np.sum(y_preds == test_y)
         return right/len(test_y)
+
+
+class Embedding_MLP(MLP): 
+    #TODO: the code goes here 
+
+    pass

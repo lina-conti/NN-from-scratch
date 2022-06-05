@@ -185,39 +185,40 @@ class EmbeddingLayer(Layer):
     'the embedding layer for a mlp. stores words as randomly initialized vectors of a given length'
 
     def __init__(self, vocab_size, embed_size):
-        '''randomly initialize a matrix of size vocab_size x embed_size
-        TODO: smarter initialization'''
+        '''randomly initialize a matrix of size vocab_size x embed_size'''
         self.vocab_size = vocab_size
         self.embed_size = embed_size
         b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
-        self.weights = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
-        print(self.weights)
+        self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
+        print(self.embedding_matrix)
 
     def forward_propagation(self, batch_X):
-        '''given a batch of inputs, returns the concatenation of embeddings for each input'''
-        self.in_ids = batch_X
-        return np.array([np.concatenate([self.weights[ident] for ident in seq]) for seq in batch_X])
+        '''given a batch of inputs, returns a batch of concatenations of the embeddings for each input'''
+        self.input_ids = batch_X
+        return np.array([np.concatenate([self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
 
     def back_propagation(self, values_previous_layer, layer_gradient):
-        '''input: values_previous layer (batch_size x window_size), the ids for the words in each batch
-                    layer_gradient (batch_size x hidden_size), the gradient returned by layer H1
+        '''Input: values_previous_layer (batch_size x num_words), the ids for the words in each batch
+                  layer_gradient (batch_size x hidden_size), the gradient returned by layer H1
 
-            calculates the updates to the word embedding matrix
+            Calculates the updates to the word embedding matrix
 
-            returns the values for the previous layer because i guess it had to return something'''
-        #initialize gradient for word embeddings
+            Output: returns the values for the previous layer because i guess it had to return something'''
+        # initialize gradient for word embeddings
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
-        #reshape input to embeddings for indivudual words
-        shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size)#batch_size x num_words x embed size
-        #init one-hot vectors so that the gradients go to the right embeddings
+        # reshape input to embeddings for individual words
+        # what was the original size? why does it need reshaping?
+        # why is it values values_previous_layer[0] and not [1]? (does not match the size on the description of the function) 
+        shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size) # batch_size x num_words x embed size
+        # init one-hot vectors so that the gradients go to the right embeddings
         one_hot = self.one_hot_matrix(values_previous_layer)
 
-        #calcualte the embeddings
+        # calcualte the embeddings
         for i, o_h in enumerate(one_hot):
             update = np.dot(o_h.T, shaped[i])
             self.embeds_gradient += update
 
-        return values_previous_layer #this does nothing
+        return values_previous_layer # this does nothing
 
     def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
@@ -229,7 +230,7 @@ class EmbeddingLayer(Layer):
         return empty
 
     def update(self, learning_rate):
-        self.weights = np.subtract(self.weights, learning_rate*self.embeds_gradient)
+        self.embedding_matrix = np.subtract(self.embedding_matrix, learning_rate*self.embeds_gradient)
 
 
 # AUXILIARY FUNCTIONS FOR MLP class

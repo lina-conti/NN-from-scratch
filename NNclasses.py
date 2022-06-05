@@ -31,8 +31,11 @@ class Layer:
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
         Abstract method to be defined in the subclasses
-        values_previous_layer: TODO add description
-        layer_gradient: TODO add description
+        values_previous_layer: the neuron values from the layer previous to this one in terms
+             of forward propagation, can be a vector the size of the previous layer or a matrix of size
+             batch_size x prev_layer
+        layer_gradient: the gradient of the loss wrt this layer, calculated by the following layer,
+            can be a vector of size layer_size or a matrix of size batch_size x layer_size
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
         pass
@@ -60,13 +63,14 @@ class AffineLayer(Layer):
         layer_size: int
         input_size: int
         Output: an instance of a AffineLayer with layer_size neurons and randomly initialized weights and biases
-        # TODO use better initialization values for the parameters?
         '''
         super().__init__(layer_size)
+        b = math.sqrt(6)/math.sqrt(input_size + layer_size)
+        generator = np.random.default_rng()
         # matrix of size input_size x layer_size
-        self.weights = np.random.rand(input_size, layer_size) #randomly initialize them
+        self.weights = generator.uniform(low=-b, high=b, size=(input_size, layer_size)) # as suggested by LaRochelle
         # vector of size layer_size
-        self.bias = np.random.rand(layer_size)    # randomly initializes it
+        self.bias = np.zeros(layer_size)    # as suggested by LaRochelle
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None
@@ -97,9 +101,9 @@ class AffineLayer(Layer):
         # use outer product for the weights gradient
         # the gradients will have one dimension more, we need to "squeeze" them
         self.weights_gradient = np.dot(np.transpose(values_previous_layer), layer_gradient)
-        
+
         self.bias_gradient = layer_gradient
-        
+
         return np.dot(layer_gradient, np.transpose(self.weights))
 
 
@@ -177,15 +181,15 @@ class ActivationLayer(Layer):
         '''
         pass
 
-class EmbeddingLayer(Layer): 
+class EmbeddingLayer(Layer):
     'the embedding layer for a mlp. stores words as randomly initialized vectors of a given length'
 
     def __init__(self, vocab_size, embed_size, ones = False):
-        '''randomly initialize a matrix of size vocab_size x embedding_size 
+        '''randomly initialize a matrix of size vocab_size x embedding_size
         TODO: smarter initialization'''
         self.vocab_size = vocab_size
         self.embed_size = embed_size
-        if ones: 
+        if ones:
             self.weights = np.ones((vocab_size, embed_size))
         else:
             self.weights = np.random.rand(vocab_size, embed_size)
@@ -199,29 +203,29 @@ class EmbeddingLayer(Layer):
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''input: values_previous layer (batch_size x window_size), the ids for the words in each batch
                     layer_gradient (batch_size x hidden_size), the gradient returned by layer H1
-                    
-            calculates the updates to the word embedding matrix 
-            
+
+            calculates the updates to the word embedding matrix
+
             returns the values for the previous layer because i guess it had to return something'''
         #initialize gradient for word embeddings
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
         #reshape input to embeddings for indivudual words
-        shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size)#batch_size x num_words x embed size 
+        shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size)#batch_size x num_words x embed size
         #init one-hot vectors so that the gradients go to the right embeddings
         one_hot = self.one_hot_matrix(values_previous_layer)
 
         #calcualte the embeddings
-        for i, o_h in enumerate(one_hot): 
+        for i, o_h in enumerate(one_hot):
             update = np.dot(o_h.T, shaped[i])
             self.embeds_gradient += update
 
         return values_previous_layer #this does nothing
-        
-    def one_hot_matrix(self, batch_values): 
+
+    def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
         empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #btch_size x w x V
         print(empty)
-        for i, in_seq in enumerate(batch_values): 
+        for i, in_seq in enumerate(batch_values):
             for j, val in enumerate(in_seq):
                 empty[i,j, val]+=1
         return empty
@@ -294,7 +298,7 @@ class MLP:
                 probabilities_output = self.forward_propagation(batch_X)
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
-            if self.verbose and e%5000==0: 
+            if self.verbose and e%5000==0:
                 print('finished epoch ', e)
 
 
@@ -326,7 +330,7 @@ class MLP:
         # loop in reverse order through the layers (stopping before the input layer)
         layer_gradient = output_gradient
         for k in range(len(self.layers_list)-1, 0, -1):
-            if self.verbose: 
+            if self.verbose:
                 print(f'layer {k}\n layer gradient: {layer_gradient}\n\
                      previous values{self.layers_list[k-1].neuron_values}')
             # back_propagation on each layer
@@ -362,7 +366,7 @@ class MLP:
         return right/len(test_y)
 
 
-class Embedding_MLP(MLP): 
-    #TODO: the code goes here 
+class Embedding_MLP(MLP):
+    #TODO: the code goes here
 
     pass

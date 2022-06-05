@@ -184,19 +184,17 @@ class ActivationLayer(Layer):
 class EmbeddingLayer(Layer):
     'the embedding layer for a mlp. stores words as randomly initialized vectors of a given length'
 
-    def __init__(self, vocab_size, embed_size, ones = False):
-        '''randomly initialize a matrix of size vocab_size x embedding_size
+    def __init__(self, vocab_size, embed_size):
+        '''randomly initialize a matrix of size vocab_size x embed_size
         TODO: smarter initialization'''
         self.vocab_size = vocab_size
         self.embed_size = embed_size
-        if ones:
-            self.weights = np.ones((vocab_size, embed_size))
-        else:
-            self.weights = np.random.rand(vocab_size, embed_size)
+        b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
+        self.weights = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
         print(self.weights)
 
     def forward_propagation(self, batch_X):
-        '''given a batch of inputs, return the concatination of embeddings for each input'''
+        '''given a batch of inputs, returns the concatenation of embeddings for each input'''
         self.in_ids = batch_X
         return np.array([np.concatenate([self.weights[ident] for ident in seq]) for seq in batch_X])
 

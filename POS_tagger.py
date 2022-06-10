@@ -1,5 +1,8 @@
 #functions for preprocessing and pos tagger class 
-
+from email.policy import default
+import pathlib
+from collections import defaultdict
+from random import sample
 
 def get_sents(path):
     '''input: path in the format pathlib.Path, pointing to a .conllu file
@@ -27,9 +30,15 @@ def get_obs(data):
         input: list[list[list[string]]]
         output: list[tuple(list[str], list[str])'''
     all_obs = []
+    word_counts = defaultdict(int)
+    tag_counts = defaultdict(int)
     for sent in data:
-        all_obs.append(([word[1] for word in sent], [word[3] for word in sent]))
-    return all_obs
+        all_obs.append(([word[1] for word in sent], [word[4] for word in sent]))
+        for word in sent:
+            word_counts[word[1]]+=1
+            tag_counts[word[4]]+=1
+        
+    return all_obs, word_counts, tag_counts
 
 def extract(path):
     '''calls the two previous functions. 
@@ -38,5 +47,40 @@ def extract(path):
     sents = get_sents(path)
     return get_obs(sents)
 
-dev = extract('surf.sequoia.dev')
+def vocabulary(symset, unknown = '<unk>', dummy = None):
+    symlist = list(set(symset))
+    if unknown: symlist.append(unknown)
+    if dummy: symlist.append(dummy)
+    return symlist, {sym:idx for idx,sym in enumerate(symlist)}
+    
+def prep_examples(data, window_size, word_counts, w2i, l2i, training = False ):
+    X = []
+    y = []
+    for sentence, tagset in data: 
+        sentence = ['<s>']*window_size + sentence + ['<s>']*window_size
+        tagset = ['<s>']*window_size + tagset + ['<s>']*window_size
+        for i in range(window_size, len(sentence)-window_size):
+            #convert words and pos tags to their ids
+            temp = [word for word in sentence[i-(window_size):i+window_size+1]]
+            for word in temp: 
+                if training and word_counts[word] <= 1: 
+                    word = sample([word]+['<unk>'], 1)[0]
+                elif not training and word_counts[word] < 1: 
+                    word = '<unk>'
+            X.append([w2i[w] if w in w2i else w2i['<unk>'] for w in temp ] )
+            y.append(l2i[tagset[i]])
+
+    return X, y
+
+train, train_words, train_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.train'))
+dev, d_words, d_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.dev'))
 print(dev[0])
+print(d_words['de'])
+
+i2w, w2i = vocabulary(train_words, dummy = '<s>')
+i2l, l2i = vocabulary(train_tags)
+
+train_X, train_y = prep_examples(train, 2, train_words, w2i, l2i, training=True)
+dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
+print(train_X[0], train_y[0])
+

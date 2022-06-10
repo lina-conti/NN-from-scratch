@@ -195,7 +195,7 @@ class EmbeddingLayer(Layer):
     def forward_propagation(self, batch_X):
         '''given a batch of inputs, returns a batch of concatenations of the embeddings for each input'''
         self.input_ids = batch_X
-        return np.array([np.concatenate([self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
+        self.neuron_values = np.array([np.concatenate([self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''Input: values_previous_layer (batch_size x num_words), the ids for the words in each batch
@@ -208,7 +208,7 @@ class EmbeddingLayer(Layer):
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
         # reshape input to embeddings for individual words
         # what was the original size? why does it need reshaping?
-        # why is it values values_previous_layer[0] and not [1]? (does not match the size on the description of the function) 
+        # why is it values values_previous_layer[0] and not [1]? (does not match the size on the description of the function)
         shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size) # batch_size x num_words x embed size
         # init one-hot vectors so that the gradients go to the right embeddings
         one_hot = self.one_hot_matrix(values_previous_layer)
@@ -218,7 +218,7 @@ class EmbeddingLayer(Layer):
             update = np.dot(o_h.T, shaped[i])
             self.embeds_gradient += update
 
-        return values_previous_layer # this does nothing
+        return None # just so it returns something
 
     def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
@@ -334,7 +334,7 @@ class MLP:
                      previous values{self.layers_list[k-1].neuron_values}')
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
-        return layer_gradient
+        return layer_gradient   #TODO why do we return this??
 
     def update(self, learning_rate):
         '''
@@ -365,7 +365,18 @@ class MLP:
         return right/len(test_y)
 
 
-class Embedding_MLP(MLP):
-    #TODO: the code goes here
+class EmbeddingMLP(MLP):
 
-    pass
+    def __init__(self, list_sizes_layers, list_activations, verbose = False, vocab_size, embed_size):
+        '''
+        list_activations: list of strings of size the number of hidden layers
+        list_sizes_layers: list of int of size len(list_activations) + 3 (for the input, embedding and output layers as well)
+        verbose: to toggle additional information
+        vocab_size: size of the vocabulary
+        embed_size: size of the embeddings
+        Output: an instance of PosTagger with layers_list initialized
+        '''
+        super(list_sizes_layers, list_activations, verbose).__init__
+
+        # unlike a regular MLP, this NN has an embedding layer between the input layer and the first affine layer
+        self.layers_list.insert(1, EmbeddingLayer(vocab_size, embed_size))

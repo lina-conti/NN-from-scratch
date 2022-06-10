@@ -372,13 +372,13 @@ class MLP:
 
 
 class EmbeddingMLP(MLP):
-    def __init__(self, list_sizes_hidden_layers, list_activations, vocab_size, embed_size, window_size, number_of_classes, verbose = False):
+    def __init__(self, list_sizes_hidden_layers, list_activations, vocab_size, embed_size, input_size, number_of_classes, verbose = False):
         '''
         list_sizes_hidden_layers: list of int of size len(list_activations)
         list_activations: list of strings of size the number of hidden layers
         vocab_size: size of the vocabulary
         embed_size: size of the embeddings
-        window_size: size of the window of words around the current being used for prediction
+        input_size: size of the input layer
         number_of_classes: C the size of the vocabulary of output classes
         verbose: to toggle additional information
         Output: an instance of EmbeddingMLP with layers_list initialized
@@ -387,13 +387,13 @@ class EmbeddingMLP(MLP):
         # a list of Layer instances
         self.layers_list = []
         # add the input layer
-        input_layer = Layer(2 * window_size + 1)
+        input_layer = Layer(input_size)
         self.layers_list.append(input_layer)
         # add the embedding layer
         embed_layer = EmbeddingLayer(vocab_size, embed_size)
         self.layers_list.append(embed_layer)
 
-        size_previous_layer = embed_size * (2 * window_size + 1)
+        size_previous_layer = embed_size * input_size
         # add the hidden layers
         for i, h in enumerate(list_activations):    # i is the number of the hidden layer and h the activation function
             self.layers_list.append(AffineLayer(size_previous_layer, list_sizes_hidden_layers[i]))

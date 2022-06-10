@@ -190,7 +190,7 @@ class EmbeddingLayer(Layer):
         self.embed_size = embed_size
         b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
         self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
-        print(self.embedding_matrix)
+        #print(self.embedding_matrix)
 
     def forward_propagation(self, batch_X):
         '''given a batch of inputs, returns a batch of concatenations of the embeddings for each input'''
@@ -223,7 +223,7 @@ class EmbeddingLayer(Layer):
     def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
         empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #btch_size x w x V
-        print(empty)
+        #print(empty)
         for i, in_seq in enumerate(batch_values):
             for j, val in enumerate(in_seq):
                 empty[i,j, val]+=1
@@ -301,6 +301,7 @@ class MLP:
                 i += batch_size
                 # for each batch, do forward, back propagation and update
                 probabilities_output = self.forward_propagation(batch_X)
+                if self.verbose: print('predicted: ', np.argmax(probabilities_output, axis = 1))
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
             if self.verbose and e%5000==0:
@@ -335,9 +336,10 @@ class MLP:
         # loop in reverse order through the layers (stopping before the input layer)
         layer_gradient = output_gradient
         for k in range(len(self.layers_list)-1, 0, -1):
-            if self.verbose:
+            '''if self.verbose:
+                
                 print(f'layer {k}\n layer gradient: {layer_gradient}\n\
-                     previous values{self.layers_list[k-1].neuron_values}')
+                     previous values{self.layers_list[k-1].neuron_values}')'''
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
         return layer_gradient   #TODO why do we return this??
@@ -401,4 +403,4 @@ class EmbeddingMLP(MLP):
             size_previous_layer = list_sizes_hidden_layers[i]
 
         # add the output layer (no activation, softmax is handled separately)
-        self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes])
+        self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes))

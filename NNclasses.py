@@ -251,25 +251,31 @@ class MLP:
     Multi-layer perceptron
     '''
 
-    def __init__(self, list_sizes_layers, list_activations, verbose = False):
+    def __init__(self, list_sizes_hidden_layers, list_activations, number_of_classes, verbose = False):
         '''
+        list_sizes_hidden_layers: list of int of size len(list_activations)
         list_activations: list of strings of size the number of hidden layers
-        list_sizes_layers: list of int of size len(list_activations) + 2 (for the input and output layers as well)
+        input_size: size of the input layer
+        number_of_classes: C the size of the vocabulary of output classes
+        verbose: to toggle additional information
         Output: an instance of MLP with layers_list initialized
         '''
         self.verbose = verbose
         # a list of Layer instances
         self.layers_list = []
         # add the input layer
-        input_layer = Layer(list_sizes_layers[0])
+        input_layer = Layer(input_size)
         self.layers_list.append(input_layer)
 
+        size_previous_layer = input_size
         # add the hidden layers
-        for i, h in enumerate(list_activations):    # i is the number of the layer and h the activation function
-            self.layers_list.append(AffineLayer(list_sizes_layers[i],list_sizes_layers[i+1]))
-            self.layers_list.append(ActivationLayer(list_sizes_layers[i+1],h))
+        for i, h in enumerate(list_activations):    # i is the number of the hidden layer and h the activation function
+            self.layers_list.append(AffineLayer(size_previous_layer, list_sizes_hidden_layers[i]))
+            self.layers_list.append(ActivationLayer(list_sizes_hidden_layers[i],h))
+            size_previous_layer = list_sizes_hidden_layers[i]
+
         # add the output layer (no activation, softmax is handled separately)
-        self.layers_list.append(AffineLayer(list_sizes_layers[-2],list_sizes_layers[-1]))   # output layer
+        self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes))
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
@@ -366,17 +372,33 @@ class MLP:
 
 
 class EmbeddingMLP(MLP):
-
-    def __init__(self, list_sizes_layers, list_activations, verbose = False, vocab_size, embed_size):
+    def __init__(self, list_sizes_hidden_layers, list_activations, vocab_size, embed_size, window_size, number_of_classes, verbose = False):
         '''
+        list_sizes_hidden_layers: list of int of size len(list_activations)
         list_activations: list of strings of size the number of hidden layers
-        list_sizes_layers: list of int of size len(list_activations) + 3 (for the input, embedding and output layers as well)
-        verbose: to toggle additional information
         vocab_size: size of the vocabulary
         embed_size: size of the embeddings
-        Output: an instance of PosTagger with layers_list initialized
+        window_size: size of the window of words around the current being used for prediction
+        number_of_classes: C the size of the vocabulary of output classes
+        verbose: to toggle additional information
+        Output: an instance of EmbeddingMLP with layers_list initialized
         '''
-        super(list_sizes_layers, list_activations, verbose).__init__
+        self.verbose = verbose
+        # a list of Layer instances
+        self.layers_list = []
+        # add the input layer
+        input_layer = Layer(2 * window_size + 1)
+        self.layers_list.append(input_layer)
+        # add the embedding layer
+        embed_layer = EmbeddingLayer(vocab_size, embed_size)
+        self.layers_list.append(embed_layer)
 
-        # unlike a regular MLP, this NN has an embedding layer between the input layer and the first affine layer
-        self.layers_list.insert(1, EmbeddingLayer(vocab_size, embed_size))
+        size_previous_layer = embed_size * (2 * window_size + 1)
+        # add the hidden layers
+        for i, h in enumerate(list_activations):    # i is the number of the hidden layer and h the activation function
+            self.layers_list.append(AffineLayer(size_previous_layer, list_sizes_hidden_layers[i]))
+            self.layers_list.append(ActivationLayer(list_sizes_hidden_layers[i],h))
+            size_previous_layer = list_sizes_hidden_layers[i]
+
+        # add the output layer (no activation, softmax is handled separately)
+        self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes])

@@ -72,15 +72,5 @@ def prep_examples(data, window_size, word_counts, w2i, l2i, training = False ):
 
     return X, y
 
-train, train_words, train_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.train'))
-dev, d_words, d_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.dev'))
-print(dev[0])
-print(d_words['de'])
 
-i2w, w2i = vocabulary(train_words, dummy = '<s>')
-i2l, l2i = vocabulary(train_tags)
-
-train_X, train_y = prep_examples(train, 2, train_words, w2i, l2i, training=True)
-dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
-print(train_X[0], train_y[0])
 

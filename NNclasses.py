@@ -1,3 +1,4 @@
+from asyncio.unix_events import BaseChildWatcher
 import numpy as np
 import random
 import math
@@ -190,6 +191,7 @@ class EmbeddingLayer(Layer):
         '''randomly initialize a matrix of size vocab_size x embed_size'''
         self.vocab_size = vocab_size
         self.embed_size = embed_size
+        self.layer_size = embed_size
         b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
         self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
         #print(self.embedding_matrix)
@@ -236,12 +238,13 @@ class EmbeddingLayer(Layer):
 
 
 # AUXILIARY FUNCTIONS FOR MLP class
-def get_one_hot_batch(batch_y):
+def get_one_hot_batch(batch_y, vector_size = None):
     '''
     batch_y: ndarray of size batch_size with the index of the gold class for each example in the batch
     Output: a batch of one-hot vectors with 1 at the y component for each example
     '''
-    one_hot = np.zeros((batch_y.size, batch_y.max()+1))
+    #print('shape ', batch_y.shape, 'size, ', batch_y.size)
+    one_hot = np.zeros((batch_y.size, (vector_size if vector_size else batch_y.max()+1)))
     # an array of size batch_size with values from 0 to the bacth_size
     rows = np.arange(batch_y.size)
     # set the components at the index of the gold classes to 1
@@ -253,7 +256,7 @@ class MLP:
     Multi-layer perceptron
     '''
 
-    def __init__(self, list_sizes_hidden_layers, list_activations, number_of_classes, verbose = False):
+    def __init__(self, list_sizes_hidden_layers, list_activations, input_size, number_of_classes, verbose = False):
         '''
         list_sizes_hidden_layers: list of int of size len(list_activations)
         list_activations: list of strings of size the number of hidden layers
@@ -278,6 +281,12 @@ class MLP:
 
         # add the output layer (no activation, softmax is handled separately)
         self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes))
+
+    def __str__(self): 
+        output = ''
+        for layer in self.layers_list:
+            output+=f'{type(layer)}, {layer.layer_size}\n'
+        return output 
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
@@ -320,6 +329,8 @@ class MLP:
         self.layers_list[0].neuron_values = batch_X
         # looping through the hidden layers, calling forward_propagation on each
         for k in range(1, len(self.layers_list)):
+            if self.verbose:
+                print(f'forward {k}: {len(self.layers_list[k-1].neuron_values)}')
             self.layers_list[k].forward_propagation(self.layers_list[k-1].neuron_values)
         # matrix of size batch_size x number_of_classes
         probabilities_output = softmax(self.layers_list[k].neuron_values, axis=1)
@@ -332,7 +343,9 @@ class MLP:
         Loops through the layers 'in reverse order' (wrt forward propagation) calling back_propagation on each
         '''
         # a batch of one-hot vectors with 1 at the y component for each example
-        one_hot = get_one_hot_batch(batch_y)
+        one_hot = get_one_hot_batch(batch_y, vector_size=len(probabilities_output[0]))
+        if self.verbose:
+            print('one-hots for output gradient: ', one_hot.shape)
         # gradient of NLL loss wrt to the pre-activation vectors at the output layer (=-e(y)-f(s) by LaRochelle's notations)
         output_gradient = - (one_hot - probabilities_output)
         # loop in reverse order through the layers (stopping before the input layer)
@@ -344,6 +357,9 @@ class MLP:
                      previous values{self.layers_list[k-1].neuron_values}')'''
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
+            if self.verbose:
+                if not k == 1: 
+                    print(f'gradient at {k}: {layer_gradient.shape}')
         return layer_gradient   #TODO why do we return this??
 
     def update(self, learning_rate):

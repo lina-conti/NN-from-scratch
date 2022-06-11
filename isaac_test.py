@@ -1,9 +1,8 @@
 from tabnanny import verbose
 from NNclasses import *
-from POS_tagger import *
-import numpy as np
+import numpy as np 
 from scipy.special import softmax
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 
 act = ActivationLayer(2, 'relu')
 
@@ -28,7 +27,7 @@ sizes = [2, 4, 8, 16, 36]
 scores = []
 '''for size in sizes:
     right = 0
-    for i in range(100):
+    for i in range(100): 
         m = MLP([2, size, 2], ['relu'])
         m.fit(X_train, y_train, batch_size=4, learning_rate=.09, epochs = 50)
         if (m.predict(X_train) == y_train).all():
@@ -41,11 +40,11 @@ plt.show()'''
 
 
 
-
+        
 
 milp = EmbeddingMLP([36], ['relu'], 2, 6, 2, 2)
 print('======', milp.predict(X_train))
-milp.fit(X_train, y_train, 4, 0.01, 10)
+milp.fit(X_train, y_train, 4, 0.01, 10000)
 print('==========', milp.predict(X_train))
 
 '''e = EmbeddingLayer(4, 5, ones = True)
@@ -64,21 +63,8 @@ e.back_propagation(ins, g)
 e.update(1)
 print(e.weights)
 '''
-train, train_words, train_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.train'))
-dev, d_words, d_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.dev'))
-print(dev[0])
-print(d_words['de'])
 
-i2w, w2i = vocabulary(train_words, dummy = '<s>')
-i2l, l2i = vocabulary(train_tags)
 
-train_X, train_y = prep_examples(train[:15], 2, train_words, w2i, l2i, training=True)
-dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
-print(train_X[0], train_y[0])
 
-pos_tagger = EmbeddingMLP([36], ['relu'], len(i2w), 20, 5, len(i2l), verbose = False )
-print(pos_tagger)
-print('before training: ', pos_tagger.test(dev_X, dev_y))
-''''''
-pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 50)
-print('after_training: ', pos_tagger.test(dev_X, dev_y))
+
+

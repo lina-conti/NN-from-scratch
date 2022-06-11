@@ -71,7 +71,8 @@ class AffineLayer(Layer):
         # matrix of size input_size x layer_size
         self.weights = generator.uniform(low=-b, high=b, size=(input_size, layer_size)) # as suggested by LaRochelle
         # vector of size layer_size
-        self.bias = np.zeros(layer_size)    # as suggested by LaRochelle
+        self.bias = np.zeros(layer_size)
+        print('bias shape: ', self.bias.shape)    # as suggested by LaRochelle
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None
@@ -87,6 +88,7 @@ class AffineLayer(Layer):
         self.neuron_values=np.empty_like(dot_porduct) # batch_size x layer_size
         for i in range(len(dot_porduct)):
             self.neuron_values[i, :] = dot_porduct[i, :] + self.bias'''
+        #print('affine layer: ', self.weights.shape, self.bias.shape, batch_X.shape)
         self.neuron_values = np.dot(batch_X, self.weights) + self.bias
 
     def back_propagation(self, values_previous_layer, layer_gradient):
@@ -117,7 +119,9 @@ class AffineLayer(Layer):
         # Multiply weights_gradient by learning_rate
         # Substract it from weights
         # Proceed likewise for bias
+        self.bias_gradient = np.sum(self.bias_gradient, axis = 0)
         self.bias = np.subtract(self.bias, (learning_rate*self.bias_gradient))
+        #print('updated: ', self.bias.shape)
         self.weights= np.subtract(self.weights, (learning_rate*self.weights_gradient))
 
 

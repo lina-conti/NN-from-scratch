@@ -45,7 +45,7 @@ plt.show()'''
 
 milp = EmbeddingMLP([36], ['relu'], 2, 6, 2, 2)
 print('======', milp.predict(X_train))
-milp.fit(X_train, y_train, 4, 0.01, 10000)
+milp.fit(X_train, y_train, 4, 0.01, 10)
 print('==========', milp.predict(X_train))
 
 '''e = EmbeddingLayer(4, 5, ones = True)
@@ -72,9 +72,16 @@ print(d_words['de'])
 i2w, w2i = vocabulary(train_words, dummy = '<s>')
 i2l, l2i = vocabulary(train_tags)
 
-train_X, train_y = prep_examples(train, 2, train_words, w2i, l2i, training=True)
+train_X, train_y = prep_examples(train[:15], 2, train_words, w2i, l2i, training=True)
 dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
 print(train_X[0], train_y[0])
+
+pos_tagger = EmbeddingMLP([12], ['relu'], len(i2w), 4, 5, len(i2l), verbose = True )
+print(pos_tagger)
+print('before training: ', pos_tagger.test(dev_X, dev_y))
+''''''
+pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 50)
+print('after_training: ', pos_tagger.test(dev_X, dev_y))
 
 
 

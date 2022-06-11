@@ -119,6 +119,19 @@ class AffineLayer(Layer):
         self.bias = np.subtract(self.bias, (learning_rate*self.bias_gradient))
         self.weights= np.subtract(self.weights, (learning_rate*self.weights_gradient))
 
+# dictionary containing possible activation functions
+function_lookup = {
+    'sigmoid': np.vectorize(lambda x: 1/(1+np.exp(x))),
+    'tanh': np.vectorize(lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1)),
+    'relu': np.vectorize(lambda x: max(0, x))
+}
+
+# dictionary containing possible activation functions' derivatives
+derivative_lookup = {
+    'sigmoid': np.vectorize(lambda x: x*(1-x)),
+    'tanh': np.vectorize(lambda x: 1-x**2),
+    'relu': np.vectorize(lambda x: 1 if x>0 else 0)
+}
 
 class ActivationLayer(Layer):
     '''
@@ -129,26 +142,15 @@ class ActivationLayer(Layer):
     Update does not do anything (there are no parameters to update).
     '''
 
-    # define the activation function's dictionary here, so it is a "static" attribute of the class
-    function_lookup = {
-        'sigmoid': (lambda x: 1/(1+np.exp(x)), lambda x: x*(1-x)),
-        'tanh': (lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1), lambda x: 1-x**2),
-        'relu': (lambda x: max(0, x), lambda x: 1 if x>0 else 0)
-    }
-
     def __init__(self, layer_size, activation_function):
         '''
         layer_size: int
         activation_function: string id of an activation function to be fetched from the
-            layer's activation functions dictionary
+            activation functions dictionary, must belong to {'sigmoid', 'tanh', 'relu'}
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
-         # get activation function from the dictionary
-        function, derivative = self.function_lookup[activation_function]
-
-        self.activation_function = np.vectorize(function)
-        self.derivative = np.vectorize(derivative)
+        self.activation_function = activation_function
 
 
 
@@ -159,7 +161,7 @@ class ActivationLayer(Layer):
 
         '''
         #test = np.array([-2, -1, 0, 1, 2, 3])
-        self.neuron_values = self.activation_function(batch_X)
+        self.neuron_values = function_lookup[self.activation_function](batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -171,7 +173,7 @@ class ActivationLayer(Layer):
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
             vector of size previous_layer or matrix of size previous_layer x batch_size
         '''
-        grad = self.derivative(values_previous_layer)
+        grad = derivative_lookup[self.activation_function](values_previous_layer)
         return layer_gradient*grad
 
     def update(self, learning_rate):
@@ -337,7 +339,7 @@ class MLP:
         layer_gradient = output_gradient
         for k in range(len(self.layers_list)-1, 0, -1):
             '''if self.verbose:
-                
+
                 print(f'layer {k}\n layer gradient: {layer_gradient}\n\
                      previous values{self.layers_list[k-1].neuron_values}')'''
             # back_propagation on each layer

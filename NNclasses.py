@@ -1,8 +1,10 @@
-from asyncio.unix_events import BaseChildWatcher
 import numpy as np
 import random
 import math
 from scipy.special import softmax
+import sys
+import argparse
+from halo import Halo
 
 class Layer:
     '''
@@ -33,10 +35,10 @@ class Layer:
         '''
         Abstract method to be defined in the subclasses
         values_previous_layer: the neuron values from the layer previous to this one in terms
-             of forward propagation, can be a vector the size of the previous layer or a matrix of size
+             of forward propagation, a matrix of size
              batch_size x prev_layer
         layer_gradient: the gradient of the loss wrt this layer, calculated by the following layer,
-            can be a vector of size layer_size or a matrix of size batch_size x layer_size
+            a matrix of size batch_size x layer_size
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
         pass
@@ -94,10 +96,10 @@ class AffineLayer(Layer):
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
         values_previous_layer: the neuron values from the layer previous to this one in terms
-             of forward propagation, can be a vector the size of the previous layer or a matrix of size
+             of forward propagation, a matrix of size
              batch_size x prev_layer
         layer_gradient: the gradient of the loss wrt this layer, calculated by the following layer,
-            can be a vector of size layer_size or a matrix of size batch_size x layer_size
+            a matrix of size batch_size x layer_size
         Computes weights_gradient and bias_gradient
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
@@ -171,12 +173,11 @@ class ActivationLayer(Layer):
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
         values_previous_layer: the neuron values from the layer previous to this one in terms
-             of forward propagation. can be a vector the size of the previous layer or a matrix of size
-             batch_size x prev_layer
-        layer_gradient: the gradient of this layer wrt. the loss, calculated at the layer After this one
-            can be a vector of size layer_size or a matrix of size batch_size x layer_size
-        Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
-            vector of size previous_layer or matrix of size previous_layer x batch_size
+             of forward propagation, a matrix of size batch_size x prev_layer
+        layer_gradient: the gradient of this layer wrt. the loss, calculated at the layer After this one,
+            a matrix of size batch_size x layer_size
+        Output: the gradient of the previous layer (considering the order of the layers for forward propagation),
+            matrix of size previous_layer x batch_size
         '''
         grad = derivative_lookup[self.activation_function](values_previous_layer)
         return layer_gradient*grad
@@ -286,11 +287,11 @@ class MLP:
         # add the output layer (no activation, softmax is handled separately)
         self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes))
 
-    def __str__(self): 
+    def __str__(self):
         output = ''
         for layer in self.layers_list:
             output+=f'{type(layer)}, {layer.layer_size}\n'
-        return output 
+        return output
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
         '''
@@ -362,7 +363,7 @@ class MLP:
             # back_propagation on each layer
             layer_gradient = self.layers_list[k].back_propagation(self.layers_list[k-1].neuron_values, layer_gradient)
             if self.verbose:
-                if not k == 1: 
+                if not k == 1:
                     print(f'gradient at {k}: {layer_gradient.shape}')
         return layer_gradient   #TODO why do we return this??
 
@@ -379,6 +380,8 @@ class MLP:
         input_X: a matrix of size batch_size x input_size OR a vector of size input_size
         Output: the predicted class (index of the class) for each input (can be a single value or a vector)
         '''
+        if input_X.ndim == 1:   # if we have a vector instead of a batch
+            input_X = [input_X]
         # call forward_propagation and do an argmax
         scores = self.forward_propagation(input_X)
         return np.argmax(scores, axis = 1)

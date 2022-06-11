@@ -5,65 +5,28 @@ import numpy as np
 from scipy.special import softmax
 import matplotlib.pyplot as plt
 
-act = ActivationLayer(2, 'relu')
+act = ActivationLayer(2, 'tanh')
 
 fake_affine_weights = np.random.rand(2, 2)
 #print(fake_affine_weights)
 
-X_train = np.array([[1, 1],[1, 0],[0, 1],[0, 0]])
+X_train = np.array([[1, 1],[1, -1],[-1, 1],[-1, -1]])
 y_train = np.array([0, 1, 1, 0])
 #print(y_train.size)
-'''
-milp = MLP([2, 3, 2], ['relu'])
-print(len(milp.layers_list))
-for l in milp.layers_list:
-    print(type(l))'''
 
-#milp.fit(X_train, y_train, 4, 1, 40000)
+milp = MLP([40], ['relu'], 2, 2)
+print(milp)
+forward = milp.forward_propagation(X_train)
+print('forward, ', forward)
+back = milp.back_propagation(forward, y_train)
+print('backwardL ', back)
+milp.update(0.1)
 
-#print(milp.predict(X_train))
+milp.fit(X_train, y_train, 4, 1, 10000)
 
-
-sizes = [2, 4, 8, 16, 36]
-scores = []
-'''for size in sizes:
-    right = 0
-    for i in range(100):
-        m = MLP([2, size, 2], ['relu'])
-        m.fit(X_train, y_train, batch_size=4, learning_rate=.09, epochs = 50)
-        if (m.predict(X_train) == y_train).all():
-            right +=1
-    scores.append(right)
-    print(f'with hidden layer size {size}: {right}/100')
-
-plt.plot(sizes, scores)
-plt.show()'''
+print(milp.predict(X_train))
 
 
-
-
-
-milp = EmbeddingMLP([36], ['relu'], 2, 6, 2, 2)
-print('======', milp.predict(X_train))
-milp.fit(X_train, y_train, 4, 0.01, 10)
-print('==========', milp.predict(X_train))
-
-'''e = EmbeddingLayer(4, 5, ones = True)
-ins = np.array([[1, 2],[2, 3]])
-
-f = e.forward_propagation(ins)
-
-probs = milp.forward_propagation(f)
-
-g = milp.back_propagation(probs, np.array([1, 0]))
-
-g = np.ones(g.shape)
-
-print('-----------\n', e.one_hot_matrix(ins))
-e.back_propagation(ins, g)
-e.update(1)
-print(e.weights)
-'''
 train, train_words, train_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.train'))
 dev, d_words, d_tags = extract(pathlib.Path('NN-from-scratch/surf.sequoia.dev'))
 print(dev[0])
@@ -72,13 +35,13 @@ print(d_words['de'])
 i2w, w2i = vocabulary(train_words, dummy = '<s>')
 i2l, l2i = vocabulary(train_tags)
 
-train_X, train_y = prep_examples(train[:15], 2, train_words, w2i, l2i, training=True)
+train_X, train_y = prep_examples(train[:50], 2, train_words, w2i, l2i, training=True)
 dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
-print(train_X[0], train_y[0])
+#print(train_X[0], train_y[0])
 
-pos_tagger = EmbeddingMLP([12], ['relu'], len(i2w), 4, 5, len(i2l), verbose = False )
-print(pos_tagger)
+pos_tagger = EmbeddingMLP([36], ['tanh'], len(i2w), 40, 5, len(i2l), verbose = False )
+#print(pos_tagger)
 print('before training: ', pos_tagger.test(dev_X, dev_y))
 ''''''
-pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 50)
+pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 100)
 print('after_training: ', pos_tagger.test(dev_X, dev_y))

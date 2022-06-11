@@ -76,7 +76,7 @@ train_X, train_y = prep_examples(train[:15], 2, train_words, w2i, l2i, training=
 dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
 print(train_X[0], train_y[0])
 
-pos_tagger = EmbeddingMLP([12], ['relu'], len(i2w), 4, 5, len(i2l), verbose = False )
+pos_tagger = EmbeddingMLP([36], ['relu'], len(i2w), 20, 5, len(i2l), verbose = False )
 print(pos_tagger)
 print('before training: ', pos_tagger.test(dev_X, dev_y))
 ''''''

@@ -1,76 +1,26 @@
-#functions for preprocessing and pos tagger class 
-from email.policy import default
-import pathlib
-from collections import defaultdict
-from random import sample
+from POSTclass import *
 
-def get_sents(path):
-    '''input: path in the format pathlib.Path, pointing to a .conllu file
-    output: list[list[list[string]]] with the content
-        all data[sentences[words[conllu features]]]'''
-    text = [line.split('\t') for line in
-            path.read_text(encoding='utf-8').split('\n') if line if
-            not line.startswith('#')]
-    sents = []
-    acc = []
-    for i in range(0, len(text)):
-        if text[i][0] == '1':
-            sents.append(acc)
-            acc = []
-        acc.append(text[i])
-    sents.append(acc)
-    del (sents[0])
-    return sents
+usage = """ PART OF SPEECH TAGGING MLP
 
-def get_obs(data):
-    '''takes as input the list of sentences (each sentence is a list of words, each word 
-    is a list of strings representing their features). 
-    returns a list of tuples (words:str, pos_tags:str)
+        Trains a multilayer perceptron classifier with one hidden layer to solve the XOR problem.
+        The default values are parameter values that we have generally found to work.
+        They can be modified using the command line options.
 
-        input: list[list[list[string]]]
-        output: list[tuple(list[str], list[str])'''
-    all_obs = []
-    word_counts = defaultdict(int)
-    tag_counts = defaultdict(int)
-    for sent in data:
-        all_obs.append(([word[1] for word in sent], [word[4] for word in sent]))
-        for word in sent:
-            word_counts[word[1]]+=1
-            tag_counts[word[4]]+=1
-        
-    return all_obs, word_counts, tag_counts
+        """+sys.argv[0]+""" [options]
 
-def extract(path):
-    '''calls the two previous functions. 
-    input: pathlib.Path
-    output: list[tuple(list[str], list[str])]'''
-    sents = get_sents(path)
-    return get_obs(sents)
+"""
 
-def vocabulary(symset, unknown = '<unk>', dummy = None):
-    symlist = list(set(symset))
-    if unknown: symlist.append(unknown)
-    if dummy: symlist.append(dummy)
-    return symlist, {sym:idx for idx,sym in enumerate(symlist)}
-    
-def prep_examples(data, window_size, word_counts, w2i, l2i, training = False ):
-    X = []
-    y = []
-    for sentence, tagset in data: 
-        sentence = ['<s>']*window_size + sentence + ['<s>']*window_size
-        tagset = ['<s>']*window_size + tagset + ['<s>']*window_size
-        for i in range(window_size, len(sentence)-window_size):
-            #convert words and pos tags to their ids
-            temp = [word for word in sentence[i-(window_size):i+window_size+1]]
-            for word in temp: 
-                if training and word_counts[word] <= 1: 
-                    word = sample([word]+['<unk>'], 1)[0]
-                elif not training and word_counts[word] < 1: 
-                    word = '<unk>'
-            X.append([w2i[w] if w in w2i else w2i['<unk>'] for w in temp ] )
-            y.append(l2i[tagset[i]])
+parser = argparse.ArgumentParser(usage = usage)
+parser.add_argument('-a', "--activation", default='relu', type=str, help='Activation function to be used, must belong to {\'sigmoid\', \'tanh\', \'relu\'}. Default={\'relu\'}')
+parser.add_argument('-l', "--learning_rate", default=0.1, type=float, help="Learning rate to be used. Default=0.01")
+parser.add_argument('-s', "--hidden_size", default=24, type=int, help="Size of the hidden layer. Default=24")
+parser.add_argument('-e', "--epochs", default= 1000, type=int, help="Number of training epochs. Default=1000")
+parser.add_argument('-i', "--interactive_mode", action="store_true", help="Toggles the interactive mode, which takes as input to truth values and returns XOR of those.")
+args = parser.parse_args()
 
-    return X, y
+tagger = POSTagger(pathlib.Path("surf.sequoia.train"), [48], ["relu"], 40, 2, verbose = False)
 
+with Halo(text='training', spinner='dots'):
+    tagger.fit(pathlib.Path("surf.sequoia.train"), 10, 0.1, 100)
 
-
+print(tagger.test(pathlib.Path("surf.sequoia.test")))

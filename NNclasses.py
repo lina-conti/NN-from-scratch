@@ -74,8 +74,7 @@ class AffineLayer(Layer):
         # matrix of size input_size x layer_size
         self.weights = generator.uniform(low=-b, high=b, size=(input_size, layer_size)) # as suggested by LaRochelle
         # vector of size layer_size
-        self.bias = np.zeros(layer_size)# as suggested by LaRochelle
-        #print('bias shape: ', self.bias.shape)    
+        self.bias = np.zeros(layer_size) # as suggested by LaRochelle
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None
@@ -147,13 +146,13 @@ class ActivationLayer(Layer):
         '''
         super().__init__(layer_size)
 
-        if activation_function == 'relu': 
+        if activation_function == 'relu':
             self.activation_function = ReluActivation()
-        elif activation_function == 'tanh': 
+        elif activation_function == 'tanh':
             self.activation_function = TanhActivation()
-        elif activation_function == 'sigmoid': 
+        elif activation_function == 'sigmoid':
             self.activation_function = SigmoidActivation()
-        else: 
+        else:
             print('error: no acceptable activation found')
 
 

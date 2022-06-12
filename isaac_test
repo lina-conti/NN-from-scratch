@@ -1,9 +1,9 @@
-from tabnanny import verbose
 from NNclasses import *
 from POS_tagger import *
 import numpy as np
 from scipy.special import softmax
 import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt 
 
 act = ActivationLayer(2, 'sigmoid')
 
@@ -22,7 +22,7 @@ back = milp.back_propagation(forward, y_train)
 print('backwardL ', back)
 milp.update(0.1)
 
-milp.fit(X_train, y_train, 4, 1, 10000)
+#milp.fit(X_train, y_train, 4, 1, 10000)
 
 print(milp.predict(X_train))
 
@@ -37,6 +37,8 @@ i2l, l2i = vocabulary(train_tags)
 
 train_X, train_y = prep_examples(train[:10], 2, train_words, w2i, l2i, training=True)
 dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
+dev_X = np.array(dev_X)
+dev_y = np.array(dev_y)
 #print(train_X[0], train_y[0])
 
 pos_tagger = EmbeddingMLP([48], ['relu'], len(i2w), 40, 5, len(i2l), verbose = False )
@@ -44,5 +46,14 @@ pos_tagger = EmbeddingMLP([48], ['relu'], len(i2w), 40, 5, len(i2l), verbose = F
 print('before training: ', pos_tagger.test(np.array(train_X), np.array(train_y)))
 ''''''
 with Halo(text = 'training', spinner = 'dots'):
-    pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 60)
+    train_s, dev_s = pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 60,
+             dev_X=dev_X, dev_y = dev_y, patience = 3)
 print('after_training: ', pos_tagger.test(np.array(train_X), np.array(train_y)))
+
+print(train_s, dev_s)
+
+plt.plot(train_s, label = 'train')
+plt.show()
+plt.plot(dev_s, label = 'dev')
+plt.legend()
+plt.show()

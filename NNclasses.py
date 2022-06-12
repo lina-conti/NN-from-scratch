@@ -289,7 +289,8 @@ class MLP:
             output+=f'{type(layer)}, {layer.layer_size}\n'
         return output
 
-    def fit(self, training_X, training_y, batch_size, learning_rate, epochs):
+    def fit(self, training_X, training_y, batch_size, learning_rate, epochs,
+                                dev_X = None, dev_y = None, patience = 10):
         '''
         training_X: matrix of size T x input_size
         training_y: a vector of size T
@@ -299,6 +300,9 @@ class MLP:
         Learns the parameters of the MLP on the training data passed to the function
         TODO: early stopping procedure (stop training when performance decreases on dev set)
         '''
+        dev_scores = []
+        train_scores = []
+
         # for each epoch
         for e in range(epochs):
             # shuffle
@@ -316,8 +320,11 @@ class MLP:
                 if self.verbose: print('predicted: ', np.argmax(probabilities_output, axis = 1))
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
+            train_scores.append(self.test(np.array(training_X), np.array(training_y)))
+
             if  e%20==0:
                 print('finished epoch ', e)
+        return train_scores, dev_scores
 
 
     def forward_propagation(self, batch_X):

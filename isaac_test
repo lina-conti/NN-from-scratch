@@ -1,9 +1,11 @@
+import matplotlib
 from NNclasses import *
 from POS_tagger import *
 import numpy as np
 from scipy.special import softmax
+import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib import pyplot as plt 
+
 
 act = ActivationLayer(2, 'sigmoid')
 

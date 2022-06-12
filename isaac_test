@@ -30,7 +30,9 @@ print(milp.predict(X_train))
 
 
 pos = POSTagger(pathlib.Path('NN-from-scratch/surf.sequoia.train'), [32], ['relu'], 40, 5)
-pos.fit(pathlib.Path('NN-from-scratch/surf.sequoia.train'), 10, 0.1, 20)
-pos.test(pathlib.Path('NN-from-scratch/surf.sequoia.test'))
+train_scores, dev_scores = pos.fit(pathlib.Path('NN-from-scratch/surf.sequoia.train'), 10, 0.01, 20)
+print(train_scores, dev_scores)
+print(len(train_scores))
+print(pos.test(pathlib.Path('NN-from-scratch/surf.sequoia.test')))
 
 

@@ -119,7 +119,7 @@ class POSTagger:
                 y.append(self.l2i[tagset[i]])
         return np.array(X), np.array(y)
 
-    def fit(self, training_path, batch_size, learning_rate, epochs):
+    def fit(self, training_path, batch_size, learning_rate, epochs, dev_path = None):
         '''
         training_path = path in the format pathlib.Path, pointing to a .conllu file (or similar)
         batch_size: int
@@ -129,8 +129,14 @@ class POSTagger:
         '''
         train, _, _ = self.extract(pathlib.Path(training_path))
         #TODO not cut train
-        train_X, train_y = self.prep_examples(train[:20], training=True)
-        self.MLP.fit(train_X, train_y, batch_size, learning_rate, epochs)
+        train_X, train_y = self.prep_examples(train[:50], training=True)
+        dev_X, dev_y = [], []
+        if dev_path:
+            dev, _, _ = self.extract(pathlib.Path(dev_path))
+            dev_X, dev_y = self.prep_examples(dev[20:], training = False)
+        train_scores, dev_scores = self.MLP.fit(train_X, train_y, batch_size, learning_rate, epochs, 
+                            dev_X, dev_y)
+        return train_scores, dev_scores
 
     def predict(self, input_X):
         '''

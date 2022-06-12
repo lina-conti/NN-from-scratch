@@ -290,7 +290,7 @@ class MLP:
         return output
 
     def fit(self, training_X, training_y, batch_size, learning_rate, epochs,
-                                dev_X = None, dev_y = None, patience = 10):
+                                dev_X = [], dev_y = [], patience = 10):
         '''
         training_X: matrix of size T x input_size
         training_y: a vector of size T
@@ -321,6 +321,12 @@ class MLP:
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
             train_scores.append(self.test(np.array(training_X), np.array(training_y)))
+            if any(dev_X):#early stopping is enforced if there is a dev set in training
+                dev_scores.append(self.test(dev_X, dev_y))
+                #early stopping criteria: the most recent dev score must be better than at least one of the 
+                #past <patience> dev scores 
+                if len(dev_scores)>patience and  dev_scores[-1] < min(dev_scores[-patience:])/0.95:
+                    return train_scores, dev_scores 
 
             if  e%20==0:
                 print('finished epoch ', e)

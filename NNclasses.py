@@ -5,6 +5,7 @@ from scipy.special import softmax
 import sys
 import argparse
 from halo import Halo
+from utils import *
 
 class Layer:
     '''
@@ -73,8 +74,8 @@ class AffineLayer(Layer):
         # matrix of size input_size x layer_size
         self.weights = generator.uniform(low=-b, high=b, size=(input_size, layer_size)) # as suggested by LaRochelle
         # vector of size layer_size
-        self.bias = np.zeros(layer_size)
-        print('bias shape: ', self.bias.shape)    # as suggested by LaRochelle
+        self.bias = np.zeros(layer_size)# as suggested by LaRochelle
+        #print('bias shape: ', self.bias.shape)    
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None
@@ -126,19 +127,7 @@ class AffineLayer(Layer):
         #print('updated: ', self.bias.shape)
         self.weights= np.subtract(self.weights, (learning_rate*self.weights_gradient))
 
-# dictionary containing possible activation functions
-function_lookup = {
-    'sigmoid': np.vectorize(lambda x: 1/(1+np.exp(x))),
-    'tanh': lambda x: np.tanh(x),
-    'relu': lambda x: np.maximum(0, x)
-}
 
-# dictionary containing possible activation functions' derivatives
-derivative_lookup = {
-    'sigmoid': np.vectorize(lambda x: x*(1-x)),
-    'tanh': lambda x: 1-np.tanh(x)**2,
-    'relu': np.vectorize(lambda x: 1 if x>0 else 0)
-}
 
 class ActivationLayer(Layer):
     '''
@@ -157,7 +146,16 @@ class ActivationLayer(Layer):
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
-        self.activation_function = activation_function
+
+        if activation_function == 'relu': 
+            self.activation_function = ReluActivation()
+        elif activation_function == 'tanh': 
+            self.activation_function = TanhActivation()
+        elif activation_function == 'sigmoid': 
+            self.activation_function = SigmoidActivation()
+        else: 
+            print('error: no acceptable activation found')
+
 
 
     def forward_propagation(self, batch_X):
@@ -167,8 +165,7 @@ class ActivationLayer(Layer):
 
         '''
         #test = np.array([-2, -1, 0, 1, 2, 3])
-        self.neuron_values = function_lookup[self.activation_function](batch_X)
-        #self.neuron_values = self.activation_function(batch_X)
+        self.neuron_values = self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''
@@ -179,8 +176,7 @@ class ActivationLayer(Layer):
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation),
             matrix of size previous_layer x batch_size
         '''
-        grad = derivative_lookup[self.activation_function](values_previous_layer)
-
+        grad = self.activation_function.deriv(values_previous_layer)
         return layer_gradient*grad
 
     def update(self, learning_rate):
@@ -321,7 +317,7 @@ class MLP:
                 if self.verbose: print('predicted: ', np.argmax(probabilities_output, axis = 1))
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
-            if self.verbose and e%5000==0:
+            if  e%20==0:
                 print('finished epoch ', e)
 
 

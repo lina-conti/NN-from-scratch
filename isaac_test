@@ -5,7 +5,7 @@ import numpy as np
 from scipy.special import softmax
 import matplotlib.pyplot as plt
 
-act = ActivationLayer(2, 'tanh')
+act = ActivationLayer(2, 'sigmoid')
 
 fake_affine_weights = np.random.rand(2, 2)
 #print(fake_affine_weights)
@@ -35,13 +35,14 @@ print(d_words['de'])
 i2w, w2i = vocabulary(train_words, dummy = '<s>')
 i2l, l2i = vocabulary(train_tags)
 
-train_X, train_y = prep_examples(train[:50], 2, train_words, w2i, l2i, training=True)
+train_X, train_y = prep_examples(train[:10], 2, train_words, w2i, l2i, training=True)
 dev_X, dev_y = prep_examples(dev, 2, train_words, w2i, l2i)
 #print(train_X[0], train_y[0])
 
-pos_tagger = EmbeddingMLP([36], ['tanh'], len(i2w), 40, 5, len(i2l), verbose = False )
+pos_tagger = EmbeddingMLP([48], ['relu'], len(i2w), 40, 5, len(i2l), verbose = False )
 #print(pos_tagger)
-print('before training: ', pos_tagger.test(dev_X, dev_y))
+print('before training: ', pos_tagger.test(np.array(train_X), np.array(train_y)))
 ''''''
-pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 100)
-print('after_training: ', pos_tagger.test(dev_X, dev_y))
+with Halo(text = 'training', spinner = 'dots'):
+    pos_tagger.fit(train_X, train_y, batch_size = 10, learning_rate=0.1, epochs = 60)
+print('after_training: ', pos_tagger.test(np.array(train_X), np.array(train_y)))

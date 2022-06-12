@@ -321,10 +321,7 @@ class MLP:
                 self.back_propagation(probabilities_output, batch_y)
                 self.update(learning_rate)
             train_scores.append(self.test(np.array(training_X), np.array(training_y)))
-            if dev_X.any(): 
-                dev_scores.append(self.test(dev_X, dev_y))
-                if dev_scores[-1] < min(dev_scores[-(min(patience, len(dev_scores))):]):
-                    return train_scores, dev_scores
+
             if  e%20==0:
                 print('finished epoch ', e)
         return train_scores, dev_scores

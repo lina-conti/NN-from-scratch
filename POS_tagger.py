@@ -1,26 +1,42 @@
 from POSTclass import *
+import pickle
 
 usage = """ PART OF SPEECH TAGGING MLP
 
-        Trains a multilayer perceptron classifier with one hidden layer to solve the XOR problem.
-        The default values are parameter values that we have generally found to work.
-        They can be modified using the command line options.
-
-        """+sys.argv[0]+""" [options]
+        """+sys.argv[0]+"""
 
 """
 
 parser = argparse.ArgumentParser(usage = usage)
-parser.add_argument('-a', "--activation", default='relu', type=str, help='Activation function to be used, must belong to {\'sigmoid\', \'tanh\', \'relu\'}. Default={\'relu\'}')
-parser.add_argument('-l', "--learning_rate", default=0.1, type=float, help="Learning rate to be used. Default=0.01")
-parser.add_argument('-s', "--hidden_size", default=24, type=int, help="Size of the hidden layer. Default=24")
-parser.add_argument('-e', "--epochs", default= 1000, type=int, help="Number of training epochs. Default=1000")
-parser.add_argument('-i', "--interactive_mode", action="store_true", help="Toggles the interactive mode, which takes as input to truth values and returns XOR of those.")
+subparsers = parser.add_subparsers(dest='mode', help='train and test a model or test a pretrained one, consult the online help of each particular mode for more information')
+train_parser = subparsers.add_parser("train")
+train_parser.add_argument("train_file", type=str, help='file containing the training corpus in conllu format')
+train_parser.add_argument("test_file", type=str, help='file containing the test corpus in conllu format')
+train_parser.add_argument('-a', "--activation", default='relu', choices=["relu", "tanh", "sigmoid"], type=str, help='activation function to be used, default={\'relu\'}')
+train_parser.add_argument('-l', "--learning_rate", default=0.1, type=float, help="learning rate to be used, default=0.1")
+train_parser.add_argument('-s', "--sizes_hidden_layers", default=[24], type=list, help="list with the sizes of the hidden layers, default=[24] (a single hidden layer of 24 neurons)")
+train_parser.add_argument('-m', "--embedding_size", default=40, type=int, help="size of the word embeddings, default=40")
+train_parser.add_argument('-w', "--window_size", default=2, type=int, help="size of the window around the current word, default=2")
+train_parser.add_argument('-b', "--batch_size", default=10, type=int, help="size of the mini batches, default=10")
+train_parser.add_argument('-e', "--epochs", default= 100, type=int, help="number of training epochs, default=100")
+test_parser = subparsers.add_parser("test")
+test_parser.add_argument("test_file", type=str, help='file containing the test corpus in conllu format')
+test_parser.add_argument("pickled_model", type=str, help='file containing the pickled model to be tested')
 args = parser.parse_args()
 
-tagger = POSTagger(pathlib.Path("surf.sequoia.train"), [48], ["relu"], 40, 2, verbose = False)
 
-with Halo(text='training', spinner='dots'):
-    tagger.fit(pathlib.Path("surf.sequoia.train"), 10, 0.1, 100)
+if args.mode == 'train':
+    list_activations = list(args.activation for h in args.sizes_hidden_layers)
+    tagger = POSTagger(pathlib.Path(args.train_file), args.sizes_hidden_layers, list_activations, args.embedding_size, args.window_size, verbose = False)
 
-print(tagger.test(pathlib.Path("surf.sequoia.test")))
+    with Halo(text='training', spinner='dots'):
+        tagger.fit(pathlib.Path(args.train_file), args.batch_size, args.learning_rate, args.epochs)
+
+    print(f"Accuracy of the trained model on {args.test_file}: {tagger.test(pathlib.Path(args.test_file)) * 100}%")
+
+
+if args.mode == 'test':
+    with open(args.pickled_model, "rb") as openfile:
+        tagger = pickle.load(openfile)
+
+    print(f"Accuracy of {args.pickled_model} on {args.test_file}: {tagger.test(pathlib.Path(args.test_file)) * 100}%")

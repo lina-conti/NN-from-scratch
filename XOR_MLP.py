@@ -39,4 +39,4 @@ if not args.interactive_mode:
 else:
     x_1 = input("First truth value (type in 0 or 1): ")
     x_2 = input("Second truth value (type in 0 or 1): ")
-    print(xor_mlp.predict(np.array([int(x_1), int(x_2)]))[0])
+    print(f"XOR({x_1},{x_2}) = {xor_mlp.predict(np.array([int(x_1), int(x_2)]))[0]}")

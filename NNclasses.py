@@ -74,7 +74,6 @@ class AffineLayer(Layer):
         self.weights = generator.uniform(low=-b, high=b, size=(input_size, layer_size)) # as suggested by LaRochelle
         # vector of size layer_size
         self.bias = np.zeros(layer_size)
-        print('bias shape: ', self.bias.shape)    # as suggested by LaRochelle
 
         # matrix of size input_size x layer_size (to be initialized during back propagation)
         self.weights_gradient = None

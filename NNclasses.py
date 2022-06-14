@@ -323,10 +323,11 @@ class MLP:
             train_scores.append(self.test(np.array(training_X), np.array(training_y)))
             if dev_X.any():#early stopping is enforced if there is a dev set in training
                 dev_scores.append(self.test(dev_X, dev_y))
-                #early stopping criteria: the most recent dev score must be better than at least one of the 
-                #past <patience> dev scores 
+                #early stopping criteria: the most recent dev score must be better than at least one of the
+                #past <patience> dev scores
                 if len(dev_scores)>patience and  dev_scores[-1] < min(dev_scores[-patience:])/0.95:
-                    return train_scores, dev_scores 
+                    print('Early stop at epoch', e)
+                    return train_scores, dev_scores
 
             if  e%20==0:
                 print('finished epoch ', e)

@@ -15,7 +15,7 @@ class POSTagger:
     def __init__(self, training_path, list_sizes_hidden_layers, list_activations, embed_size, window_size, verbose = False):
         '''
         input:
-            training_path = path in the format pathlib.Path, pointing to a .conllu file (or similar)
+            training_path = path pointing to a .conllu file (or similar)
             list_sizes_hidden_layers = list of int with size of each hidden layer
             list_activations = list of strings of size the number of hidden layers
             embed_size = size of the embeddings
@@ -121,20 +121,19 @@ class POSTagger:
 
     def fit(self, training_path, batch_size, learning_rate, epochs, dev_path = None):
         '''
-        training_path = path in the format pathlib.Path, pointing to a .conllu file (or similar)
+        training_path = path pointing to a .conllu file (or similar)
         batch_size: int
         learning_rate: float
         epochs: int
         Learns the parameters of the MLP on the training data passed to the function
         '''
         train, _, _ = self.extract(pathlib.Path(training_path))
-        #TODO not cut train
         train_X, train_y = self.prep_examples(train, training=True)
         dev_X, dev_y = np.array([[]]), np.array([[]])
         if dev_path:
             dev, _, _ = self.extract(pathlib.Path(dev_path))
             dev_X, dev_y = self.prep_examples(dev, training = False)
-        train_scores, dev_scores = self.MLP.fit(train_X, train_y, batch_size, learning_rate, epochs, 
+        train_scores, dev_scores = self.MLP.fit(train_X, train_y, batch_size, learning_rate, epochs,
                             dev_X, dev_y)
         return train_scores, dev_scores
 

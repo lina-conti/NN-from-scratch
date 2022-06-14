@@ -1,8 +1,5 @@
-from tabnanny import verbose
 from NNclasses import *
-import numpy as np 
-from scipy.special import softmax
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 
 act = ActivationLayer(2, 'relu')
 
@@ -27,7 +24,7 @@ sizes = [2, 4, 8, 16, 36]
 scores = []
 '''for size in sizes:
     right = 0
-    for i in range(100): 
+    for i in range(100):
         m = MLP([2, size, 2], ['relu'])
         m.fit(X_train, y_train, batch_size=4, learning_rate=.09, epochs = 50)
         if (m.predict(X_train) == y_train).all():
@@ -40,7 +37,7 @@ plt.show()'''
 
 
 
-        
+
 
 milp = EmbeddingMLP([36], ['relu'], 2, 6, 2, 2)
 print('======', milp.predict(X_train))
@@ -63,8 +60,3 @@ e.back_propagation(ins, g)
 e.update(1)
 print(e.weights)
 '''
-
-
-
-
-

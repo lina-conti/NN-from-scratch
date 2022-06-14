@@ -51,5 +51,3 @@ all_best_accs = []
 '''
 print(all_best_accs)
 print(f'best rate: {best_rate}\nbest accuracy: {best_dev_acc}')
-
-

@@ -25,7 +25,7 @@ class POSTagger:
         self.verbose = verbose
         self.window_size = window_size
 
-        _, train_words, train_tags = self.extract(training_path)
+        _, train_words, train_tags = self.extract(pathlib.Path(training_path))
         self.train_vocab = train_words
 
         # i2w: list to go from a word id to the word
@@ -129,11 +129,11 @@ class POSTagger:
         '''
         train, _, _ = self.extract(pathlib.Path(training_path))
         #TODO not cut train
-        train_X, train_y = self.prep_examples(train[:50], training=True)
-        dev_X, dev_y = [], []
+        train_X, train_y = self.prep_examples(train, training=True)
+        dev_X, dev_y = np.array([[]]), np.array([[]])
         if dev_path:
             dev, _, _ = self.extract(pathlib.Path(dev_path))
-            dev_X, dev_y = self.prep_examples(dev[20:], training = False)
+            dev_X, dev_y = self.prep_examples(dev, training = False)
         train_scores, dev_scores = self.MLP.fit(train_X, train_y, batch_size, learning_rate, epochs, 
                             dev_X, dev_y)
         return train_scores, dev_scores

@@ -35,4 +35,21 @@ print(train_scores, dev_scores)
 print(len(train_scores))
 print(pos.test(pathlib.Path('NN-from-scratch/surf.sequoia.test')))
 
+possible_learning_rates = [0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
+best_dev_acc = 0
+best_rate = None
+all_best_accs = []
+'''for rate in possible_learning_rates:
+    with Halo(text = f'training at {rate}', spinner = 'dots'):
+        pos = POSTagger('NN-from-scratch/surf.sequoia.train', [32], ['relu'], 40, 5)
+        train_scores, dev_scores = pos.fit('NN-from-scratch/surf.sequoia.train', 10, rate, 100, 'NN-from-scratch/surf.sequoia.dev')
+        if dev_scores[-1]>best_dev_acc:
+            best_dev_acc = dev_scores[-1]
+            best_rate = rate
+            all_best_accs = dev_scores
+        print(f'\n finished with {rate}, dev acc {dev_scores[-1]}, total epochs {len(dev_scores)}')
+'''
+print(all_best_accs)
+print(f'best rate: {best_rate}\nbest accuracy: {best_dev_acc}')
+
 

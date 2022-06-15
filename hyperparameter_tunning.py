@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 
 # Tunning the learning rate
-possible_learning_rates = [0.001, 0.009, 0.01, 0.05, 0.1, 0.2]
+possible_learning_rates = [0.008, 0.009, 0.01, 0.05]
 best_dev_acc = 0
 best_rate = None
 all_best_accs = []

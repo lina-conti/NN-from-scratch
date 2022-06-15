@@ -1,39 +1,39 @@
 #utility functions for NNClasses
-import numpy as np  
+import numpy as np
 
-class Activation(): 
+class Activation(object): 
     '''an abstract activation functor class'''
-    def __init__(self): 
-        pass 
+    def __init__(self):
+        pass
     def __call__(self, X):
         pass
     def deriv(self, X):
-        pass 
+        pass
 
-class ReluActivation(Activation): 
+class ReluActivation(Activation):
 
-    def __call__(self, X): 
+    def __call__(self, X):
         return np.maximum(0, X)
 
-    def deriv(self, X): 
+    def deriv(self, X):
         X = np.where(X <= 0, 0, X)
         X = np.where(X > 0, 1, X)
         return X
 
-class TanhActivation(Activation): 
+class TanhActivation(Activation):
 
     def __call__(self, X):
         return np.tanh(X)
-    
-    def deriv(self, X): 
+
+    def deriv(self, X):
         return 1-np.tanh(X)**2
 
-class SigmoidActivation(Activation): 
+class SigmoidActivation(Activation):
 
-    def __call__(self, X): 
+    def __call__(self, X):
         return 1.0/(1.0+np.exp(-X))
 
-    def deriv(self, X): 
+    def deriv(self, X):
         temp = self(X)
         return temp*(1-temp)
 

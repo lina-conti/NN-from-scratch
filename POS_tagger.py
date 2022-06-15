@@ -1,5 +1,6 @@
 from POSTclass import *
-import pickle
+import jsonpickle
+import json
 
 usage = """ PART OF SPEECH TAGGING MLP
 
@@ -21,7 +22,7 @@ train_parser.add_argument('-b', "--batch_size", default=10, type=int, help="size
 train_parser.add_argument('-e', "--epochs", default= 100, type=int, help="number of training epochs, default=100")
 test_parser = subparsers.add_parser("test")
 test_parser.add_argument("test_file", type=str, help='file containing the test corpus in conllu format')
-test_parser.add_argument("pickled_model", type=str, help='file containing the pickled model to be tested')
+test_parser.add_argument("model", type=str, help='file containing the model to be tested in json format')
 args = parser.parse_args()
 
 
@@ -36,7 +37,8 @@ if args.mode == 'train':
 
 
 if args.mode == 'test':
-    with open(args.pickled_model, "rb") as openfile:
-        tagger = pickle.load(openfile)
+    with open(args.model, "r") as openfile:
+        json_str = openfile.read()
+        tagger = jsonpickle.decode(json_str)
 
-    print(f"Accuracy of {args.pickled_model} on {args.test_file}: {tagger.test(pathlib.Path(args.test_file)) * 100}%")
+    print(f"Accuracy of {args.model} on {args.test_file}: {tagger.test(pathlib.Path(args.test_file)) * 100}%")

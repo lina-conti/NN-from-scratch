@@ -7,7 +7,7 @@ import argparse
 from halo import Halo
 from utils import *
 
-class Layer:
+class Layer(object):
     '''
     Class containing what AffineLayer and ActivationLayer share in common
     It is also used to define the input layer simply
@@ -192,9 +192,9 @@ class EmbeddingLayer(Layer):
         self.vocab_size = vocab_size
         self.embed_size = embed_size
         self.layer_size = embed_size
-        #we use laRochell's strategy for initializing parameters 
+        #we use laRochell's strategy for initializing parameters
         b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
-        self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) 
+        self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size))
 
 
     def forward_propagation(self, batch_X):
@@ -212,8 +212,8 @@ class EmbeddingLayer(Layer):
             Output: returns the values for the previous layer because i guess it had to return something'''
         # initialize gradient for word embeddings
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
-        # reshape input from batch_size x layer_size to batch_size x input_size x embed_size 
-        # this gives us the gradients for individual words 
+        # reshape input from batch_size x layer_size to batch_size x input_size x embed_size
+        # this gives us the gradients for individual words
         shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size) # batch_size x num_words x embed size
         # init one-hot vectors so that the gradients go to the right embeddings
         one_hot = self.one_hot_matrix(values_previous_layer)
@@ -251,7 +251,7 @@ def get_one_hot_batch(batch_y, vector_size = None):
     one_hot[rows, batch_y] = 1
     return one_hot
 
-class MLP:
+class MLP(object):
     '''
     Multi-layer perceptron
     '''
@@ -298,9 +298,9 @@ class MLP:
         learning_rate: float
         epochs: int
         Learns the parameters of the MLP on the training data passed to the function
-        dev_X and dev_y: examples from the dev set. empty by default, if provided, used 
-            to calculate early stopping to prevent overfitting. 
-        patience: the patience interval for early stopping. 10 by default. 
+        dev_X and dev_y: examples from the dev set. empty by default, if provided, used
+            to calculate early stopping to prevent overfitting.
+        patience: the patience interval for early stopping. 10 by default.
         '''
         dev_scores = []
         train_scores = []

@@ -50,13 +50,13 @@ for act in possible_activations:
         t = time.time()
         tagger = POSTagger(pathlib.Path('surf.sequoia.train'), [32], [act], best_size, 2)
         try:
-            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'), 
+            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'),
                                                 10, best_rate, 100, 'surf.sequoia.dev')
             if dev_scores[-1]>best_dev_acc_acts:
                 best_dev_acc_acts = dev_scores[-1]
                 best_function = act
                 all_best_accs_acts = dev_scores
-        except: 
+        except:
             print(f'error encountered training with {act} ')
     spinner.succeed(text=f'\n finished with {act}, dev acc {dev_scores[-1]}, total epochs {len(dev_scores)}\
         , total training time = {time.time() - t}')
@@ -74,13 +74,13 @@ for setup in possible_layers:
         t = time.time()
         tagger = POSTagger(pathlib.Path('surf.sequoia.train'), setup, [best_function]*len(setup), best_size, 2)
         try:
-            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'), 
+            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'),
                                                 10, best_rate, 100, 'surf.sequoia.dev')
             if dev_scores[-1]>best_dev_acc_layers:
                 best_dev_acc_layers = dev_scores[-1]
                 best_setup = setup
                 all_best_accs_layers = dev_scores
-        except: 
+        except:
             print(f'error encountered training with {setup} ')
     spinner.succeed(text=f'\n finished with {setup}, dev acc {dev_scores[-1]}, total epochs {len(dev_scores)}\
         , total training time = {time.time() - t}')
@@ -98,17 +98,17 @@ all_best_accs_windows = []
 for window in possible_window_sizes:
     with Halo(text = f'training with window = {window}', spinner = 'dots') as spinner:
         t = time.time()
-        tagger = POSTagger(pathlib.Path('surf.sequoia.train'), 
+        tagger = POSTagger(pathlib.Path('surf.sequoia.train'),
             best_setup, [best_function]*len(best_setup), best_size, window)
         try:
-            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'), 
+            train_scores, dev_scores = tagger.fit(pathlib.Path('surf.sequoia.train'),
                                                 10, best_rate, 100, 'surf.sequoia.dev')
             if dev_scores[-1]>best_dev_acc_windows:
                 best_dev_acc_windows = dev_scores[-1]
                 best_window = window
                 all_best_accs_windows = dev_scores
                 best_model = tagger
-        except: 
+        except:
             print(f'error encountered training with {window} ')
     spinner.succeed(text=f'\n finished with {window}, dev acc {dev_scores[-1]}, total epochs {len(dev_scores)}\
         , total training time = {time.time() - t}')
@@ -120,3 +120,7 @@ print(f'best hyperparameters: \nLR = {best_rate}\nembed size = {best_size}\nacti
     \nbest architecture = {best_setup}\nbest window = {best_window}')
 
 print(f'best model accuracy on test: {best_model.test("surf.sequoia.test")}')
+
+with open("good_model.json", "w") as outfile:
+    encoded_model = jsonpickle.encode(best_model)
+    outfile.write(encoded_model)

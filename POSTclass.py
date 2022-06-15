@@ -99,7 +99,13 @@ class POSTagger:
 
     def prep_examples(self, data, training = False ):
         '''
-        TODO
+        read a list of sentences and pos tags (list:tup(list[word:str], list[tag:str])), return 
+        examples made of a target word and the words within the window, paired with the gold tags for 
+        each target word. 
+        if training, randomly choose to turn hapaxes to the unknown word token with a 50% chance
+        if not training, any words which are unseen in the training vocab are replaced with <unk>
+
+        returns X: np.array(num_examples, 2*window+1), y: numpy.array(num_examples)
         '''
         word_counts = self.train_vocab
         X = []
@@ -125,6 +131,7 @@ class POSTagger:
         batch_size: int
         learning_rate: float
         epochs: int
+        if there is a dev set, read and prepare the data then use for early stopping in training
         Learns the parameters of the MLP on the training data passed to the function
         '''
         train, _, _ = self.extract(pathlib.Path(training_path))

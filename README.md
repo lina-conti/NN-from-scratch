@@ -33,7 +33,7 @@ We then tested our MLP on the POS tagging task, which is more challenging, as no
 $ python POS_tagger.py train [-h] [-a {relu,tanh,sigmoid}] [-l LEARNING_RATE] [-s SIZES_HIDDEN_LAYERS] [-m EMBEDDING_SIZE] [-w WINDOW_SIZE] [-b BATCH_SIZE] [-e EPOCHS] train_file dev_file test_file
 ```
 
-This command will train an MLP on the train, dev and test files given as argument. The default hyperparameter values can be modified using the command line options.
+This command will train an MLP on the train file, using the dev file for early stopping during training and calculate final trained accuracy on teh test file given as argument. The default hyperparameter values can be modified using the command line options.
 
 #### `test` mode
 

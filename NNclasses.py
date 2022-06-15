@@ -145,7 +145,7 @@ class ActivationLayer(Layer):
         Output: an instance of a ActivationLayer with layer_size neurons
         '''
         super().__init__(layer_size)
-
+        #we use classes for the activation functions for better stability when pickling
         if activation_function == 'relu':
             self.activation_function = ReluActivation()
         elif activation_function == 'tanh':
@@ -163,7 +163,6 @@ class ActivationLayer(Layer):
         Updates the attribute neuron_values by applying the activation function to batch_X
 
         '''
-        #test = np.array([-2, -1, 0, 1, 2, 3])
         self.neuron_values = self.activation_function(batch_X)
 
     def back_propagation(self, values_previous_layer, layer_gradient):
@@ -193,14 +192,16 @@ class EmbeddingLayer(Layer):
         self.vocab_size = vocab_size
         self.embed_size = embed_size
         self.layer_size = embed_size
+        #we use laRochell's strategy for initializing parameters 
         b = math.sqrt(6)/math.sqrt(vocab_size + embed_size)
-        self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) # as suggested by LaRochelle
-        #print(self.embedding_matrix)
+        self.embedding_matrix = np.random.default_rng().uniform(low=-b, high=b, size=(vocab_size, embed_size)) 
+
 
     def forward_propagation(self, batch_X):
         '''given a batch of inputs, returns a batch of concatenations of the embeddings for each input'''
         self.input_ids = batch_X
-        self.neuron_values = np.array([np.concatenate([self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
+        self.neuron_values = np.array([np.concatenate(
+            [self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
 
     def back_propagation(self, values_previous_layer, layer_gradient):
         '''Input: values_previous_layer (batch_size x num_words), the ids for the words in each batch
@@ -211,14 +212,12 @@ class EmbeddingLayer(Layer):
             Output: returns the values for the previous layer because i guess it had to return something'''
         # initialize gradient for word embeddings
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
-        # reshape input to embeddings for individual words
-        # what was the original size? why does it need reshaping?
-        # why is it values values_previous_layer[0] and not [1]? (does not match the size on the description of the function)
+        # reshape input from batch_size x layer_size to batch_size x input_size x embed_size 
+        # this gives us the gradients for individual words 
         shaped = layer_gradient.reshape(len(layer_gradient), len(values_previous_layer[0]), self.embed_size) # batch_size x num_words x embed size
         # init one-hot vectors so that the gradients go to the right embeddings
         one_hot = self.one_hot_matrix(values_previous_layer)
-
-        # calcualte the embeddings
+        # calculate the embeddings
         for i, o_h in enumerate(one_hot):
             update = np.dot(o_h.T, shaped[i])
             self.embeds_gradient += update
@@ -228,7 +227,7 @@ class EmbeddingLayer(Layer):
     def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
         empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #btch_size x w x V
-        #print(empty)
+
         for i, in_seq in enumerate(batch_values):
             for j, val in enumerate(in_seq):
                 empty[i,j, val]+=1
@@ -284,6 +283,7 @@ class MLP:
         self.layers_list.append(AffineLayer(list_sizes_hidden_layers[-1], number_of_classes))
 
     def __str__(self):
+        '''stringify the object in some meaningful way'''
         output = ''
         for layer in self.layers_list:
             output+=f'{type(layer)}, {layer.layer_size}\n'
@@ -298,7 +298,9 @@ class MLP:
         learning_rate: float
         epochs: int
         Learns the parameters of the MLP on the training data passed to the function
-        TODO: early stopping procedure (stop training when performance decreases on dev set)
+        dev_X and dev_y: examples from the dev set. empty by default, if provided, used 
+            to calculate early stopping to prevent overfitting. 
+        patience: the patience interval for early stopping. 10 by default. 
         '''
         dev_scores = []
         train_scores = []
@@ -324,7 +326,7 @@ class MLP:
             if dev_X.any():#early stopping is enforced if there is a dev set in training
                 dev_scores.append(self.test(dev_X, dev_y))
                 #early stopping criteria: the most recent dev score must be better than at least one of the
-                #past <patience> dev scores
+                #past <patience> dev scores divided by .95 (a minimum improvement is required to keep training)
                 if len(dev_scores)>patience and  dev_scores[-1] < min(dev_scores[-patience:])/0.95:
                     print('Early stop at epoch', e)
                     return train_scores, dev_scores

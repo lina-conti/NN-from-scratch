@@ -56,15 +56,15 @@ This command will train an MLP on the train file, using the dev file for early s
 
 The default hyperparameter values can be modified using the command line options:
 
-- `activation`: activation function to be used, must belong to {relu,tanh,sigmoid}, default='relu'
+- `activation`: activation function to be used, must belong to {relu,tanh,sigmoid}, default='tanh'
 
-- `learning_rate`: learning rate to be used, float, default=0.1
+- `learning_rate`: learning rate to be used, float, default=0.008
 
-- `sizes_hidden_layers`: list with the sizes of the hidden layers (int), default=[24] (a single hidden layer of 24 neurons)
+- `sizes_hidden_layers`: list with the sizes of the hidden layers (int), default=[32] (a single hidden layer of 32 neurons)
 
-- `embedding_size`: size of the word embeddings, int, default=40
+- `embedding_size`: size of the word embeddings, int, default=60
 
-- `window_size`: size of the window around the current word to be used as features, int, default=2
+- `window_size`: size of the window around the current word to be used as features, int, default=4
 
 - `batch_size`: size of the mini batches, int, default=10
 

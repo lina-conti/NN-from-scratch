@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(usage = usage)
 subparsers = parser.add_subparsers(dest='mode', help='train and test a model or test a pretrained one, consult the online help of each particular mode for more information')
 train_parser = subparsers.add_parser("train")
 train_parser.add_argument("train_file", type=str, help='file containing the training corpus in conll format')
-train_parser.add_argument("dev_file", type=str, default=None, help='file containing the development corpus in conll format, default=None')
+train_parser.add_argument("dev_file", type=str, help='file containing the development corpus in conll format, default=None')
 train_parser.add_argument("test_file", type=str, help='file containing the test corpus in conll format')
 train_parser.add_argument('-a', "--activation", default='tanh', choices=["relu", "tanh", "sigmoid"], type=str, help='activation function to be used, default={\'tanh\'}')
 train_parser.add_argument('-l', "--learning_rate", default=0.008, type=float, help="learning rate to be used, default=0.008")
@@ -32,20 +32,9 @@ if args.mode == 'train':
     tagger = POSTagger(pathlib.Path(args.train_file), args.sizes_hidden_layers, list_activations, args.embedding_size, args.window_size,  verbose = False)
 
     with Halo(text='training', spinner='dots'):
-        train_scores, dev_scores = tagger.fit(pathlib.Path(args.train_file), args.batch_size, args.learning_rate, args.epochs, dev_path=args.dev_file)
-
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    df = pd.DataFrame({'training set':train_scores, 'development set':dev_scores})
-    df['epochs'] = df.reset_index().index
-    df.plot(y=['training set','development set'], x='epochs', xlabel='Epoch', ylabel='Accuracy')
-    plt.show()
+        tagger.fit(pathlib.Path(args.train_file), args.batch_size, args.learning_rate, args.epochs, dev_path=args.dev_file)
 
     print(f"Accuracy of the trained model on {args.test_file}: {tagger.test(pathlib.Path(args.test_file)) * 100}%")
-
-    with open("good_tagger.json", "w") as outfile:
-        encoded_model = jsonpickle.encode(tagger)
-        outfile.write(encoded_model)
 
 
 if args.mode == 'test':

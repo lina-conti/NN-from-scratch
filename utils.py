@@ -1,7 +1,7 @@
 #utility functions for NNClasses
 import numpy as np
 
-class Activation(object): 
+class Activation(object):
     '''an abstract activation functor class'''
     def __init__(self):
         pass

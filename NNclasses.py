@@ -314,10 +314,11 @@ class MLP(object):
                 #early stopping criteria: the most recent dev score must be better than at least one of the
                 #past <patience> dev scores divided by .95 (a minimum improvement is required to keep training)
                 if len(dev_scores)>patience and  dev_scores[-1] <= min(dev_scores[-patience:])/0.95:
-                    print('Early stop at epoch', e)
+                    if self.verbose:
+                        print('Early stop at epoch', e)
                     return train_scores, dev_scores
 
-            if  e%20==0:
+            if  e%20==0 and self.verbose:
                 print('finished epoch ', e)
         return train_scores, dev_scores
 

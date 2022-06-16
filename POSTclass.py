@@ -90,7 +90,11 @@ class POSTagger:
 
     def vocabulary(self, symset, unknown = '<unk>', dummy = None):
         '''
-        TODO
+        symset: iterable, set, or dict. the words to make the vocabulary out of
+        dummy: optional, a string to be added to the vocabulary
+        returns: 
+            i2x: a list mapping word ids (ints) to words (strings)
+            x2i: a list mapping words(strings) to ids (ints)
         '''
         symlist = list(set(symset))
         if unknown: symlist.append(unknown)

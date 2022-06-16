@@ -86,11 +86,7 @@ class AffineLayer(Layer):
         batch_X: matrix (ndarray) of size batch_size x input_size
         Updates the attribute neuron_values by doing a linear combination between the weights and the inputs in X and then summing the bias
         '''
-        '''dot_porduct= np.dot(batch_X, self.weights) # batch_size x layer_size
-        self.neuron_values=np.empty_like(dot_porduct) # batch_size x layer_size
-        for i in range(len(dot_porduct)):
-            self.neuron_values[i, :] = dot_porduct[i, :] + self.bias'''
-        #print('affine layer: ', self.weights.shape, self.bias.shape, batch_X.shape)
+
         self.neuron_values = np.dot(batch_X, self.weights) + self.bias
 
     def back_propagation(self, values_previous_layer, layer_gradient):
@@ -103,8 +99,7 @@ class AffineLayer(Layer):
         Computes weights_gradient and bias_gradient
         Output: the gradient of the previous layer (considering the order of the layers for forward propagation)
         '''
-        # use outer product for the weights gradient
-        # the gradients will have one dimension more, we need to "squeeze" them
+
         self.weights_gradient = np.dot(np.transpose(values_previous_layer), layer_gradient)
 
         self.bias_gradient = layer_gradient
@@ -116,7 +111,8 @@ class AffineLayer(Layer):
         '''
         learning_rate: float
         Updates the values of the parameters at the end of a back propagation on the whole NN
-        Resets weights_gradient and bias_gradient to zeroes
+        weights gradient and bias gradient are re-initialized at every backprop call, so there is no 
+            need to reset them here.
         '''
         # Multiply weights_gradient by learning_rate
         # Substract it from weights
@@ -130,8 +126,9 @@ class AffineLayer(Layer):
 
 class ActivationLayer(Layer):
     '''
-    Activation layer of a hidden layer in a neural network. Initialized with a number of neurons (should match the
-    size of the preceding affine layer) and a custom activation function (sigmoid, tanh, relu)
+    Activation layer of a hidden layer in a neural network. Initialized with a number of neurons 
+    (should match the size of the preceding affine layer) and a custom activation function 
+    (sigmoid, tanh, relu)
 
     Forward propagation applies the activation function to the value at every neuron.
     Update does not do anything (there are no parameters to update).
@@ -198,7 +195,8 @@ class EmbeddingLayer(Layer):
 
 
     def forward_propagation(self, batch_X):
-        '''given a batch of inputs, returns a batch of concatenations of the embeddings for each input'''
+        '''given a batch of inputs, sets self.neuron values as a batch of concatenations of 
+        the embeddings for each input'''
         self.input_ids = batch_X
         self.neuron_values = np.array([np.concatenate(
             [self.embedding_matrix[id] for id in ids_sequence]) for ids_sequence in batch_X])
@@ -209,7 +207,7 @@ class EmbeddingLayer(Layer):
 
             Calculates the updates to the word embedding matrix
 
-            Output: returns the values for the previous layer because i guess it had to return something'''
+            Output: None (there are no parameters to update in previous layers'''
         # initialize gradient for word embeddings
         self.embeds_gradient = np.zeros((self.vocab_size, self.embed_size))
         # reshape input from batch_size x layer_size to batch_size x input_size x embed_size
@@ -226,7 +224,7 @@ class EmbeddingLayer(Layer):
 
     def one_hot_matrix(self, batch_values):
         '''helper function, gets the matrices of one-hot vectors for each batch elemement in backprop'''
-        empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #btch_size x w x V
+        empty = np.zeros((len(batch_values), len(batch_values[0]), self.vocab_size)) #batch_size x w x V
 
         for i, in_seq in enumerate(batch_values):
             for j, val in enumerate(in_seq):
@@ -239,7 +237,7 @@ class EmbeddingLayer(Layer):
 
 class MLP(object):
     '''
-    Multi-layer perceptron
+    Multi-layer perceptron with no embedding layer. a useful skeleton for more ambitious architectures :) 
     '''
 
     def __init__(self, list_sizes_hidden_layers, list_activations, input_size, number_of_classes, verbose = False):
@@ -259,8 +257,8 @@ class MLP(object):
         self.layers_list.append(input_layer)
 
         size_previous_layer = input_size
-        # add the hidden layers
-        for i, h in enumerate(list_activations):    # i is the number of the hidden layer and h the activation function
+        # add the hidden layers: i is the number of the hidden layer and h the activation function
+        for i, h in enumerate(list_activations): 
             self.layers_list.append(AffineLayer(size_previous_layer, list_sizes_hidden_layers[i]))
             self.layers_list.append(ActivationLayer(list_sizes_hidden_layers[i],h))
             size_previous_layer = list_sizes_hidden_layers[i]
@@ -318,7 +316,7 @@ class MLP(object):
                         print('Early stop at epoch', e)
                     return train_scores, dev_scores
 
-            if  e%20==0 and self.verbose:
+            if  e%5==0 and self.verbose:
                 print('finished epoch ', e)
         return train_scores, dev_scores
 
@@ -344,7 +342,8 @@ class MLP(object):
         '''
         probabilities_output: matrix of size batch_size x number_of_classes (result of forward_propagation)
         batch_y: vector of size batch_size
-        Loops through the layers 'in reverse order' (wrt forward propagation) calling back_propagation on each
+        Loops through the layers 'in reverse order' (wrt forward propagation) calling 
+        back_propagation on each
         '''
         # a batch of one-hot vectors with 1 at the y component for each example
         one_hot = get_one_hot_batch(batch_y, vector_size=len(probabilities_output[0]))
@@ -364,7 +363,7 @@ class MLP(object):
             if self.verbose:
                 if not k == 1:
                     print(f'gradient at {k}: {layer_gradient.shape}')
-        return layer_gradient   #TODO why do we return this??
+        return layer_gradient   
 
     def update(self, learning_rate):
         '''
@@ -398,6 +397,9 @@ class MLP(object):
 
 
 class EmbeddingMLP(MLP):
+    ''' an MLP with an embedding layer. Useful for many NLP classification tasks
+    supports the same methods as the base MLP class'''
+    
     def __init__(self, list_sizes_hidden_layers, list_activations, vocab_size, embed_size, input_size, number_of_classes, verbose = False):
         '''
         list_sizes_hidden_layers: list of int of size len(list_activations)
@@ -420,8 +422,8 @@ class EmbeddingMLP(MLP):
         self.layers_list.append(embed_layer)
 
         size_previous_layer = embed_size * input_size
-        # add the hidden layers
-        for i, h in enumerate(list_activations):    # i is the number of the hidden layer and h the activation function
+        # add the hidden layers: i is the number of the hidden layer and h the activation function
+        for i, h in enumerate(list_activations):   
             self.layers_list.append(AffineLayer(size_previous_layer, list_sizes_hidden_layers[i]))
             self.layers_list.append(ActivationLayer(list_sizes_hidden_layers[i],h))
             size_previous_layer = list_sizes_hidden_layers[i]

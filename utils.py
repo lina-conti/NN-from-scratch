@@ -11,7 +11,7 @@ class Activation(object):
         pass
 
 class ReluActivation(Activation):
-
+    '''Rectified Linear unit: returns x if x > 0, otherwise returns x'''
     def __call__(self, X):
         return np.maximum(0, X)
 
@@ -21,7 +21,7 @@ class ReluActivation(Activation):
         return X
 
 class TanhActivation(Activation):
-
+    '''Hyperbolic tangent: maps all values to between -1 and 1'''
     def __call__(self, X):
         return np.tanh(X)
 
@@ -29,7 +29,7 @@ class TanhActivation(Activation):
         return 1-np.tanh(X)**2
 
 class SigmoidActivation(Activation):
-
+    '''sigmod activation: maps all values to between 0 and 1'''
     def __call__(self, X):
         return 1.0/(1.0+np.exp(-X))
 
@@ -37,7 +37,7 @@ class SigmoidActivation(Activation):
         temp = self(X)
         return temp*(1-temp)
 
-# AUXILIARY FUNCTIONS FOR MLP class
+# AUXILIARY FUNCTION FOR MLP class
 def get_one_hot_batch(batch_y, vector_size = None):
     '''
     batch_y: ndarray of size batch_size with the index of the gold class for each example in the batch

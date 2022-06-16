@@ -237,20 +237,6 @@ class EmbeddingLayer(Layer):
         self.embedding_matrix = np.subtract(self.embedding_matrix, learning_rate*self.embeds_gradient)
 
 
-# AUXILIARY FUNCTIONS FOR MLP class
-def get_one_hot_batch(batch_y, vector_size = None):
-    '''
-    batch_y: ndarray of size batch_size with the index of the gold class for each example in the batch
-    Output: a batch of one-hot vectors with 1 at the y component for each example
-    '''
-    #print('shape ', batch_y.shape, 'size, ', batch_y.size)
-    one_hot = np.zeros((batch_y.size, (vector_size if vector_size else batch_y.max()+1)))
-    # an array of size batch_size with values from 0 to the bacth_size
-    rows = np.arange(batch_y.size)
-    # set the components at the index of the gold classes to 1
-    one_hot[rows, batch_y] = 1
-    return one_hot
-
 class MLP(object):
     '''
     Multi-layer perceptron

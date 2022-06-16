@@ -2,7 +2,9 @@ from POSTclass import *
 import matplotlib
 import matplotlib.pyplot as plt
 import time
+import jsonpickle
 
+"""
 # Tunning the learning rate
 possible_learning_rates = [0.008, 0.009, 0.01, 0.05]
 best_dev_acc = 0
@@ -63,6 +65,11 @@ for act in possible_activations:
 print(all_best_accs_acts)
 print(f'best function: {best_function}\nbest accuracy: {best_dev_acc_acts}')
 
+"""
+
+best_function = 'relu'
+best_size = 60
+best_rate = 0.008
 
 # Tunning the size and number of hidden layers
 possible_layers = [[32], [32, 32], [64], [64, 32], [64, 64]]

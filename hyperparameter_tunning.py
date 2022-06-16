@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import time
 import jsonpickle
 
-"""
 # Tunning the learning rate
 possible_learning_rates = [0.008, 0.009, 0.01, 0.05]
 best_dev_acc = 0
@@ -64,8 +63,6 @@ for act in possible_activations:
         , total training time = {time.time() - t}')
 print(all_best_accs_acts)
 print(f'best function: {best_function}\nbest accuracy: {best_dev_acc_acts}')
-
-"""
 
 best_function = 'relu'
 best_size = 60
@@ -128,6 +125,6 @@ print(f'best hyperparameters: \nLR = {best_rate}\nembed size = {best_size}\nacti
 
 print(f'best model accuracy on test: {best_model.test("surf.sequoia.test")}')
 
-with open("good_model.json", "w") as outfile:
+with open("good_tagger.json", "w") as outfile:
     encoded_model = jsonpickle.encode(best_model)
     outfile.write(encoded_model)

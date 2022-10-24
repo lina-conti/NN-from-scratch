@@ -1,4 +1,4 @@
-# :brain: NN-from-scratch 
+# :brain: Neural network from scratch 
 NLP Project 2022
 
 ## Presentation
